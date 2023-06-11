@@ -1,42 +1,33 @@
 package main
 
 import (
+	"fmt"
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
-	"io"
-	"log"
+	"nandes007/blog-post-rest-api/app"
+	"nandes007/blog-post-rest-api/controller"
+	"nandes007/blog-post-rest-api/helper"
+	"nandes007/blog-post-rest-api/repository"
+	"nandes007/blog-post-rest-api/service"
 	"net/http"
 	"time"
 )
 
-var mux map[string]func(http.ResponseWriter, *http.Request)
-
 func main() {
+	db := app.NewDB()
+	validate := validator.New()
+	userRepository := repository.NewUserRepository()
+	userService := service.NewUserService(userRepository, db, validate)
+	userController := controller.NewUserController(userService)
+	router := app.NewRouter(userController)
+
 	server := http.Server{
-		Addr:        "localhost:9001",
-		Handler:     &myHandler{},
+		Addr:        ":9001",
+		Handler:     helper.NewMiddleware(router),
 		ReadTimeout: 5 * time.Second,
 	}
 
-	mux = make(map[string]func(w http.ResponseWriter, r *http.Request))
-	mux["/tmp"] = Tmp
+	fmt.Printf("Server is running at http://localhost%s\n", server.Addr)
 	err := server.ListenAndServe()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-type myHandler struct {
-}
-
-func (*myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if h, ok := mux[r.URL.String()]; ok {
-		h(w, r)
-		return
-	}
-
-	io.WriteString(w, "URL: "+r.URL.String())
-}
-
-func Tmp(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "version 3")
+	helper.PanicIfError(err)
 }
