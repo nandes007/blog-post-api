@@ -7,6 +7,7 @@ import (
 	"nandes007/blog-post-rest-api/app"
 	"nandes007/blog-post-rest-api/controller"
 	"nandes007/blog-post-rest-api/helper"
+	"nandes007/blog-post-rest-api/middleware"
 	"nandes007/blog-post-rest-api/repository"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
@@ -23,7 +24,7 @@ func main() {
 
 	server := http.Server{
 		Addr:        ":9001",
-		Handler:     helper.NewMiddleware(router),
+		Handler:     middleware.NewHandler(router),
 		ReadTimeout: 5 * time.Second,
 	}
 
