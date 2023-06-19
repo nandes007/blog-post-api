@@ -7,6 +7,7 @@ import (
 	"nandes007/blog-post-rest-api/app"
 	"nandes007/blog-post-rest-api/controller"
 	"nandes007/blog-post-rest-api/helper"
+	"nandes007/blog-post-rest-api/helper/env"
 	"nandes007/blog-post-rest-api/middleware"
 	"nandes007/blog-post-rest-api/repository"
 	"nandes007/blog-post-rest-api/service"
@@ -15,6 +16,7 @@ import (
 )
 
 func main() {
+	env.Load()
 	db := app.NewDB()
 	validate := validator.New()
 	userRepository := repository.NewUserRepository()

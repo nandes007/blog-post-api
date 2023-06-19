@@ -3,10 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/hash"
+	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/model/domain"
+	"nandes007/blog-post-rest-api/model/web/user"
 )
 
 type UserRepositoryImpl struct {
@@ -47,4 +50,43 @@ func (repository *UserRepositoryImpl) GetAll(ctx context.Context, tx *sql.Tx) []
 		users = append(users, user)
 	}
 	return users
+}
+
+func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, request user.LoginRequest) string {
+	stmt, err := db.Prepare("SELECT email, password FROM users WHERE email = $1 LIMIT 1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRow(request.Email)
+
+	var (
+		email    string
+		password string
+	)
+
+	err = row.Scan(&email, &password)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Fatal("No row found")
+		} else {
+			log.Fatal("Error retriving row : ", err)
+		}
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(request.Password))
+
+	if err != nil {
+		return "Credential missmatch"
+	}
+
+	tokenString, err := jwt.CreateToken(request.Email)
+
+	if err != nil {
+		log.Fatal("Ops, something went wrong")
+	}
+
+	return tokenString
 }

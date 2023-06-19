@@ -21,3 +21,7 @@ func ToUserResponses(users []domain.User) []user.Response {
 
 	return userResponses
 }
+
+func ToUserLoginResponse(token string) string {
+	return token
+}

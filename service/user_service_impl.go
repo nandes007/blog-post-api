@@ -52,3 +52,9 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) []user.Response {
 	users := service.UserRepository.GetAll(ctx, tx)
 	return response.ToUserResponses(users)
 }
+
+func (service *UserServiceImpl) Login(ctx context.Context, request user.LoginRequest) string {
+
+	generateToken := service.UserRepository.Login(ctx, service.DB, request)
+	return response.ToUserLoginResponse(generateToken)
+}

@@ -43,3 +43,17 @@ func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, reques
 
 	helper.WriteToResponseBody(writer, apiResponse)
 }
+
+func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	loginRequest := user.LoginRequest{}
+	helper.ReadFromRequestBody(request, &loginRequest)
+
+	token := controller.UserService.Login(request.Context(), loginRequest)
+	apiResponse := web.ApiResponse{
+		Code:   200,
+		Status: "Success",
+		Data:   token,
+	}
+
+	helper.WriteToResponseBody(writer, apiResponse)
+}
