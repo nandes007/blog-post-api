@@ -39,7 +39,7 @@ func validationErrors(writer http.ResponseWriter, request *http.Request, err int
 }
 
 func notFoundError(writer http.ResponseWriter, request *http.Request, err interface{}) bool {
-	exceptio, ok := err.(NotFoundError)
+	exception, ok := err.(NotFoundError)
 	if ok {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
@@ -47,7 +47,7 @@ func notFoundError(writer http.ResponseWriter, request *http.Request, err interf
 		apiResponse := web.ApiResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
-			Data:   exceptio.Error,
+			Data:   exception.Error,
 		}
 
 		helper.WriteToResponseBody(writer, apiResponse)

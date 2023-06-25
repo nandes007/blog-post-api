@@ -9,10 +9,10 @@ import (
 
 func NewRouter(userController controller.UserController) *httprouter.Router {
 	router := httprouter.New()
-	router.POST("/api/users", userController.Create)
-	//router.GET("/api/users", userController.FindAll)
+	router.POST("/api/users", middleware.JwtAuthMiddleware(userController.Create))
 	router.GET("/api/users", middleware.JwtAuthMiddleware(userController.FindAll))
 	router.POST("/api/users/login", userController.Login)
+	//router.GET("/api/users", userController.FindAll)
 
 	router.PanicHandler = exception.ErrorHandler
 

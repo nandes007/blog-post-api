@@ -35,6 +35,9 @@ func JwtAuthMiddleware(next httprouter.Handle) httprouter.Handle {
 				Data:   "Unauthorized",
 			}
 
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+
 			helper.WriteToResponseBody(w, apiResponse)
 			return
 		}

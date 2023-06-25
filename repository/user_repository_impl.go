@@ -28,9 +28,6 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	user.Id = id
 	return user
