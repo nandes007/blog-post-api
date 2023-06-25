@@ -48,7 +48,19 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 	loginRequest := user.LoginRequest{}
 	helper.ReadFromRequestBody(request, &loginRequest)
 
-	token := controller.UserService.Login(request.Context(), loginRequest)
+	token, err := controller.UserService.Login(request.Context(), loginRequest)
+
+	if err != nil {
+		apiResponse := web.ApiResponse{
+			Code:   400,
+			Status: "Bad Request",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, apiResponse)
+		return
+	}
+
 	apiResponse := web.ApiResponse{
 		Code:   200,
 		Status: "Success",

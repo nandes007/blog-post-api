@@ -16,6 +16,10 @@ func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interfa
 		return
 	}
 
+	if notFoundError(writer, request, err) {
+		return
+	}
+
 	internalServerError(writer, request, err)
 }
 

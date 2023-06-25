@@ -53,8 +53,13 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) []user.Response {
 	return response.ToUserResponses(users)
 }
 
-func (service *UserServiceImpl) Login(ctx context.Context, request user.LoginRequest) string {
+func (service *UserServiceImpl) Login(ctx context.Context, request user.LoginRequest) (string, error) {
 
-	generateToken := service.UserRepository.Login(ctx, service.DB, request)
-	return response.ToUserLoginResponse(generateToken)
+	generateToken, err := service.UserRepository.Login(ctx, service.DB, request)
+
+	if err != nil {
+		return "", err
+	}
+
+	return response.ToUserLoginResponse(generateToken), nil
 }

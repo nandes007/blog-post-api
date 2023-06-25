@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"nandes007/blog-post-rest-api/helper"
@@ -49,7 +50,7 @@ func (repository *UserRepositoryImpl) GetAll(ctx context.Context, tx *sql.Tx) []
 	return users
 }
 
-func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, request user.LoginRequest) string {
+func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, request user.LoginRequest) (string, error) {
 	stmt, err := db.Prepare("SELECT email, password FROM users WHERE email = $1 LIMIT 1")
 	if err != nil {
 		log.Fatal(err)
@@ -67,23 +68,23 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, req
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Fatal("No row found")
+			return "", errors.New("credential mismatch")
 		} else {
-			log.Fatal("Error retriving row : ", err)
+			helper.PanicIfError(err)
 		}
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(request.Password))
 
 	if err != nil {
-		return "Credential missmatch"
+		return "", errors.New("credential mismatch")
 	}
 
 	tokenString, err := jwt.CreateToken(request.Email)
 
 	if err != nil {
-		log.Fatal("Ops, something went wrong")
+		helper.PanicIfError(err)
 	}
 
-	return tokenString
+	return tokenString, nil
 }
