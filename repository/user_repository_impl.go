@@ -93,7 +93,6 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, req
 func (repository *UserRepositoryImpl) Find(ctx context.Context, db *sql.DB, token string) (domain.User, error) {
 	//TODO implement me
 	userId, err := jwt.ParseUserToken(token)
-	defer db.Close()
 
 	if err != nil {
 		return domain.User{}, errors.New("invalid credential")

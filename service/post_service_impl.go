@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/go-playground/validator/v10"
+	"log"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/helper/response"
@@ -34,19 +35,26 @@ func (service PostServiceImpl) Create(ctx context.Context, request post.CreateRe
 	helper.PanicIfError(err)
 
 	tx, err := service.DB.Begin()
-	helper.PanicIfError(err)
+	//helper.PanicIfError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer helper.CommitOrRollback(tx)
 
 	tokenFormatted := jwt.FormatToken(token)
 	user, err := service.UserRepository.Find(ctx, service.DB, tokenFormatted)
 
+	//helper.PanicIfError(err)
 	if err != nil {
-		helper.PanicIfError(err)
+		log.Fatal(err)
 	}
 
 	post := domain.Post{
-		Title:   request.Title,
-		Content: request.Content,
+		AuthorId:  user.Id,
+		Title:     request.Title,
+		Content:   request.Content,
+		CreatedAt: helper.GetCurrentTime(),
+		UpdatedAt: helper.GetCurrentTime(),
 	}
 
 	post = service.PostRepository.Save(ctx, tx, user, post)
