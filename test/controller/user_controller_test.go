@@ -35,12 +35,17 @@ func SetupTestDB() *sql.DB {
 	return db
 }
 
+// Must be move for initialize application!.
 func setupRouter(db *sql.DB) http.Handler {
 	validate := validator.New()
 	userRepository := repository.NewUserRepository()
 	userService := service.NewUserService(userRepository, db, validate)
 	userController := controller.NewUserController(userService)
-	router := app.NewRouter(userController)
+
+	postRepository := repository.NewPostRepository()
+	postService := service.NewPostService(postRepository, userRepository, db, validate)
+	postController := controller.NewPostController(postService)
+	router := app.NewRouter(userController, postController)
 
 	return middleware.NewHandler(router)
 }
