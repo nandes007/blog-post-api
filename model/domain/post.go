@@ -2,7 +2,7 @@ package domain
 
 type Post struct {
 	Id        int
-	UserId    int
+	AuthorId  int
 	Title     string
 	Content   string
 	CreatedAt string

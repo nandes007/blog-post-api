@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"github.com/go-playground/validator/v10"
+	"log"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/response"
 	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/repository"
+	"strings"
 )
 
 type UserServiceImpl struct {
@@ -62,4 +64,20 @@ func (service *UserServiceImpl) Login(ctx context.Context, request user.LoginReq
 	}
 
 	return response.ToUserLoginResponse(generateToken), nil
+}
+
+func (service *UserServiceImpl) Find(ctx context.Context, token string) (user.Response, error) {
+	//TODO implement me
+	//log.Fatal("HERE")
+	var user domain.User
+	tokenFormatted := strings.Replace(token, "Bearer ", "", 1)
+
+	user, err := service.UserRepository.Find(ctx, service.DB, tokenFormatted)
+
+	if err != nil {
+		log.Fatal(err)
+		return response.ToUserResponse(user), err
+	}
+
+	return response.ToUserResponse(user), nil
 }

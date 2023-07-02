@@ -69,3 +69,29 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 
 	helper.WriteToResponseBody(writer, apiResponse)
 }
+
+func (controller *UserControllerImpl) Find(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	//TODO implement me
+	token := request.Header.Get("Authorization")
+
+	user, err := controller.UserService.Find(request.Context(), token)
+
+	if err != nil {
+		apiResponse := web.ApiResponse{
+			Code:   400,
+			Status: "Bad Request",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, apiResponse)
+		return
+	}
+
+	apiResponse := web.ApiResponse{
+		Code:   200,
+		Status: "Success",
+		Data:   user,
+	}
+
+	helper.WriteToResponseBody(writer, apiResponse)
+}

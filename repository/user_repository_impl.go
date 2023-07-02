@@ -27,7 +27,7 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 	err := tx.QueryRowContext(ctx, SqlQuery, user.Name, user.Email, passwordHashed, currentDate, currentDate).Scan(&id)
 
 	if err != nil {
-		log.Fatal(err)
+		helper.PanicIfError(err)
 	}
 
 	user.Id = id
@@ -51,7 +51,7 @@ func (repository *UserRepositoryImpl) GetAll(ctx context.Context, tx *sql.Tx) []
 }
 
 func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, request user.LoginRequest) (string, error) {
-	stmt, err := db.Prepare("SELECT email, password FROM users WHERE email = $1 LIMIT 1")
+	stmt, err := db.Prepare("SELECT id, email, password FROM users WHERE email = $1 LIMIT 1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,12 +59,13 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, req
 
 	row := stmt.QueryRow(request.Email)
 
+	var id int
 	var (
 		email    string
 		password string
 	)
 
-	err = row.Scan(&email, &password)
+	err = row.Scan(&id, &email, &password)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -80,11 +81,30 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, db *sql.DB, req
 		return "", errors.New("credential mismatch")
 	}
 
-	tokenString, err := jwt.CreateToken(request.Email)
+	tokenString, err := jwt.CreateToken(id)
 
 	if err != nil {
 		helper.PanicIfError(err)
 	}
 
 	return tokenString, nil
+}
+
+func (repository *UserRepositoryImpl) Find(ctx context.Context, db *sql.DB, token string) (domain.User, error) {
+	//TODO implement me
+	userId, err := jwt.ParseUserToken(token)
+	defer db.Close()
+
+	if err != nil {
+		return domain.User{}, errors.New("invalid credential")
+	}
+
+	query := "SELECT id, name, email FROM users WHERE id = $1"
+	var user domain.User
+	err = db.QueryRowContext(ctx, query, userId).Scan(&user.Id, &user.Name, &user.Email)
+	if err != nil {
+		return domain.User{}, errors.New("invalid credential")
+	}
+
+	return user, nil
 }
