@@ -15,3 +15,12 @@ func ToPostResponse(postDomain domain.Post) post.Response {
 		UpdatedAt: postDomain.UpdatedAt,
 	}
 }
+
+func ToPostsResponse(posts []domain.Post) []post.Response {
+	var postsResponse []post.Response
+	for _, post := range posts {
+		postsResponse = append(postsResponse, ToPostResponse(post))
+	}
+
+	return postsResponse
+}

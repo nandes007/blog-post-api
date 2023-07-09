@@ -61,3 +61,43 @@ func (service PostServiceImpl) Create(ctx context.Context, request post.CreateRe
 
 	return response.ToPostResponse(post)
 }
+
+func (service PostServiceImpl) FindAll(ctx context.Context) []post.Response {
+	posts := service.PostRepository.GetAll(ctx, service.DB)
+	return response.ToPostsResponse(posts)
+}
+
+func (service PostServiceImpl) Find(ctx context.Context, id int) post.Response {
+	post := service.PostRepository.Find(ctx, service.DB, id)
+	return response.ToPostResponse(post)
+}
+
+func (service PostServiceImpl) Update(ctx context.Context, request post.CreateRequest, id int) post.Response {
+	err := service.Validate.Struct(request)
+	tx, err := service.DB.Begin()
+
+	helper.PanicIfError(err)
+
+	defer helper.CommitOrRollback(tx)
+
+	service.PostRepository.Update(ctx, tx, request, id)
+
+	post := domain.Post{
+		Id:       id,
+		AuthorId: 1,
+		Title:    request.Title,
+		Content:  request.Content,
+	}
+
+	return response.ToPostResponse(post)
+}
+
+func (service PostServiceImpl) Delete(ctx context.Context, id int) bool {
+	tx, err := service.DB.Begin()
+	helper.PanicIfError(err)
+	defer helper.CommitOrRollback(tx)
+
+	service.PostRepository.Delete(ctx, tx, id)
+
+	return true
+}

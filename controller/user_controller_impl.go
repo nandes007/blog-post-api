@@ -57,6 +57,8 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 			Data:   err.Error(),
 		}
 
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
 		helper.WriteToResponseBody(writer, apiResponse)
 		return
 	}

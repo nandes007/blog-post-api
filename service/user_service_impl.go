@@ -29,6 +29,11 @@ func NewUserService(userRepository repository.UserRepository, DB *sql.DB, valida
 
 func (service *UserServiceImpl) Create(ctx context.Context, request user.CreateRequest) user.Response {
 	err := service.Validate.Struct(request)
+
+	if err != nil {
+		
+	}
+
 	helper.PanicIfError(err)
 
 	tx, err := service.DB.Begin()

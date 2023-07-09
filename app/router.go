@@ -17,6 +17,10 @@ func NewRouter(userController controller.UserController, postController controll
 
 	// posts route
 	router.POST("/api/posts", middleware.JwtAuthMiddleware(postController.Create))
+	router.GET("/api/posts", middleware.JwtAuthMiddleware(postController.FindAll))
+	router.GET("/api/posts/:id", middleware.JwtAuthMiddleware(postController.Find))
+	router.PUT("/api/posts/:id", middleware.JwtAuthMiddleware(postController.Update))
+	router.DELETE("/api/posts/:id", middleware.JwtAuthMiddleware(postController.Delete))
 
 	router.PanicHandler = exception.ErrorHandler
 

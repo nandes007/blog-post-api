@@ -58,6 +58,29 @@ func TestLoginSuccess(t *testing.T) {
 	assert.Equal(t, "Success", responseBody["status"])
 }
 
+func TestLoginFailed(t *testing.T) {
+	db := test.SetupTestDB()
+	router := test.SetupRouter(db)
+
+	requestBody := strings.NewReader(`{"email": "test123123test@example.com", "password": "password"}`)
+	request := httptest.NewRequest(http.MethodPost, "http://localhost:9001/api/users/login", requestBody)
+	request.Header.Add("Content-Type", "application/json")
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+
+	response := recorder.Result()
+	assert.Equal(t, 400, response.StatusCode)
+
+	body, _ := io.ReadAll(response.Body)
+	var responseBody map[string]interface{}
+	json.Unmarshal(body, &responseBody)
+
+	assert.Equal(t, http.StatusBadRequest, int(responseBody["code"].(float64)))
+	assert.Equal(t, "Bad Request", responseBody["status"])
+	assert.Equal(t, "credential mismatch", responseBody["data"])
+}
+
 func TestCreateUserSuccess(t *testing.T) {
 	db := test.SetupTestDB()
 	truncateUser(db)
