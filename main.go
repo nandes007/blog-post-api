@@ -26,7 +26,11 @@ func main() {
 	postRepository := repository.NewPostRepository()
 	postService := service.NewPostService(postRepository, userRepository, db, validate)
 	postController := controller.NewPostController(postService)
-	router := app.NewRouter(userController, postController)
+
+	authRepository := repository.NewAuthRepository()
+	authService := service.NewAuthService(authRepository, db, validate)
+	authController := controller.NewAuthController(authService)
+	router := app.NewRouter(userController, postController, authController)
 
 	server := http.Server{
 		Addr:        ":9001",

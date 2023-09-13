@@ -7,13 +7,15 @@ import (
 	"nandes007/blog-post-rest-api/middleware"
 )
 
-func NewRouter(userController controller.UserController, postController controller.PostController) *httprouter.Router {
+func NewRouter(userController controller.UserController, postController controller.PostController, authController controller.AuthController) *httprouter.Router {
 	router := httprouter.New()
-	router.POST("/api/users", middleware.JwtAuthMiddleware(userController.Create))
+	// authentications
+	router.POST("/api/login", authController.Login)
+	router.POST("/api/register", authController.Register)
+
+	// users route
 	router.GET("/api/users", middleware.JwtAuthMiddleware(userController.FindAll))
-	router.POST("/api/users/login", userController.Login)
 	router.GET("/api/users/find", middleware.JwtAuthMiddleware(userController.Find))
-	//router.GET("/api/users", userController.FindAll)
 
 	// posts route
 	router.POST("/api/posts", middleware.JwtAuthMiddleware(postController.Create))

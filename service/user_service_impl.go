@@ -27,30 +27,6 @@ func NewUserService(userRepository repository.UserRepository, DB *sql.DB, valida
 	}
 }
 
-func (service *UserServiceImpl) Create(ctx context.Context, request user.CreateRequest) user.Response {
-	err := service.Validate.Struct(request)
-
-	if err != nil {
-		
-	}
-
-	helper.PanicIfError(err)
-
-	tx, err := service.DB.Begin()
-	helper.PanicIfError(err)
-	defer helper.CommitOrRollback(tx)
-
-	user := domain.User{
-		Name:     request.Name,
-		Email:    request.Email,
-		Password: request.Password,
-	}
-
-	user = service.UserRepository.Save(ctx, tx, user)
-
-	return response.ToUserResponse(user)
-}
-
 func (service *UserServiceImpl) FindAll(ctx context.Context) []user.Response {
 	tx, err := service.DB.Begin()
 	helper.PanicIfError(err)
@@ -60,20 +36,7 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) []user.Response {
 	return response.ToUserResponses(users)
 }
 
-func (service *UserServiceImpl) Login(ctx context.Context, request user.LoginRequest) (string, error) {
-
-	generateToken, err := service.UserRepository.Login(ctx, service.DB, request)
-
-	if err != nil {
-		return "", err
-	}
-
-	return response.ToUserLoginResponse(generateToken), nil
-}
-
 func (service *UserServiceImpl) Find(ctx context.Context, token string) (user.Response, error) {
-	//TODO implement me
-	//log.Fatal("HERE")
 	var user domain.User
 	tokenFormatted := strings.Replace(token, "Bearer ", "", 1)
 
