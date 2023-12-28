@@ -3,7 +3,6 @@ package test
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/go-playground/validator/v10"
 	"io"
 	"nandes007/blog-post-rest-api/app"
 	"nandes007/blog-post-rest-api/controller"
@@ -15,6 +14,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func SetupTestDB() *sql.DB {
@@ -39,7 +40,11 @@ func SetupRouter(db *sql.DB) http.Handler {
 	postRepository := repository.NewPostRepository()
 	postService := service.NewPostService(postRepository, userRepository, db, validate)
 	postController := controller.NewPostController(postService)
-	router := app.NewRouter(userController, postController)
+
+	authRepository := repository.NewAuthRepository()
+	authService := service.NewAuthService(authRepository, db, validate)
+	authController := controller.NewAuthController(authService)
+	router := app.NewRouter(userController, postController, authController)
 
 	return middleware.NewHandler(router)
 }

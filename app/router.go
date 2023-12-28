@@ -1,14 +1,21 @@
 package app
 
 import (
-	"github.com/julienschmidt/httprouter"
+	"fmt"
 	"nandes007/blog-post-rest-api/controller"
 	"nandes007/blog-post-rest-api/exception"
 	"nandes007/blog-post-rest-api/middleware"
+	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func NewRouter(userController controller.UserController, postController controller.PostController, authController controller.AuthController) *httprouter.Router {
 	router := httprouter.New()
+	router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		fmt.Fprint(w, "Running")
+	})
+
 	// authentications
 	router.POST("/api/login", authController.Login)
 	router.POST("/api/register", authController.Register)
