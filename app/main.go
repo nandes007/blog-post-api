@@ -2,21 +2,23 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	_ "github.com/lib/pq"
-	"nandes007/blog-post-rest-api/app"
+	app "nandes007/blog-post-rest-api/config"
 	"nandes007/blog-post-rest-api/controller"
 	"nandes007/blog-post-rest-api/helper"
-	"nandes007/blog-post-rest-api/helper/env"
 	"nandes007/blog-post-rest-api/middleware"
 	"nandes007/blog-post-rest-api/repository"
+	"nandes007/blog-post-rest-api/routes"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	env.Load()
+	// env.Load()
+	fmt.Println("Changed")
 	db := app.NewDB()
 	validate := validator.New()
 	userRepository := repository.NewUserRepository()
@@ -30,7 +32,7 @@ func main() {
 	authRepository := repository.NewAuthRepository()
 	authService := service.NewAuthService(authRepository, db, validate)
 	authController := controller.NewAuthController(authService)
-	router := app.NewRouter(userController, postController, authController)
+	router := routes.NewRouter(userController, postController, authController)
 
 	server := http.Server{
 		Addr:        ":9001",

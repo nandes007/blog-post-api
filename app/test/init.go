@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
-	"nandes007/blog-post-rest-api/app"
 	"nandes007/blog-post-rest-api/controller"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/middleware"
 	"nandes007/blog-post-rest-api/repository"
+	"nandes007/blog-post-rest-api/routes"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
 	"net/http/httptest"
@@ -44,7 +44,7 @@ func SetupRouter(db *sql.DB) http.Handler {
 	authRepository := repository.NewAuthRepository()
 	authService := service.NewAuthService(authRepository, db, validate)
 	authController := controller.NewAuthController(authService)
-	router := app.NewRouter(userController, postController, authController)
+	router := routes.NewRouter(userController, postController, authController)
 
 	return middleware.NewHandler(router)
 }

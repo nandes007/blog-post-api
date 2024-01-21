@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: ./app
+    depends_on:
+      - app-database
+    environment:
+      - production
+    ports:
+      - 9001:9001
+
+  app-database:
+    image: postgres
+    restart: always
+    networks:
+      new:
+        aliases:
+          - database
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=blog_post
+    volumes:
+      - database:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+
+  migrate:
+    image: migrate/migrate
+    networks:
+     - new
+    depends_on:
+      - app-database
+    volumes:
+      - ./migrations:/migrations
+    command:
+      ["-path", "/migrations", "-database", "postgres://postgres:password@database:5432/blog_post?sslmode=disable", "up"]
+    links:
+      - app-database
+
+volumes:
+  database:
+
+networks:
+  new:
