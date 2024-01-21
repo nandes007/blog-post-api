@@ -13,7 +13,7 @@ services:
     image: postgres
     restart: always
     networks:
-      new:
+      default:
         aliases:
           - database
     environment:
@@ -27,7 +27,7 @@ services:
   migrate:
     image: migrate/migrate
     networks:
-     - new
+     - default
     depends_on:
       - app-database
     volumes:
@@ -41,4 +41,4 @@ volumes:
   database:
 
 networks:
-  new:
+  default:
