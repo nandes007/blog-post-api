@@ -7,4 +7,4 @@ CREATE TABLE users
     created_at date,
     updated_at date,
     deleted_at date
-)
+);
