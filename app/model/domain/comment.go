@@ -6,4 +6,6 @@ type Comment struct {
 	UserId   int
 	ParentId int
 	Content  string
+	User     User
+	Post     Post
 }

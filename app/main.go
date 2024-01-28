@@ -31,8 +31,12 @@ func main() {
 	authRepository := repository.NewAuthRepository()
 	authService := service.NewAuthService(authRepository, db, validate)
 	authController := controller.NewAuthController(authService)
-	router := routes.NewRouter(userController, postController, authController)
 
+	commentRepository := repository.NewCommentRepository()
+	commentService := service.NewCommentService(commentRepository, postRepository, userRepository, db, validate)
+	commentController := controller.NewCommentController(commentService)
+
+	router := routes.NewRouter(userController, postController, authController, commentController)
 	server := http.Server{
 		Addr:        ":9001",
 		Handler:     middleware.NewHandler(router),

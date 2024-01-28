@@ -44,7 +44,11 @@ func SetupRouter(db *sql.DB) http.Handler {
 	authRepository := repository.NewAuthRepository()
 	authService := service.NewAuthService(authRepository, db, validate)
 	authController := controller.NewAuthController(authService)
-	router := routes.NewRouter(userController, postController, authController)
+
+	commentRepository := repository.NewCommentRepository()
+	commentService := service.NewCommentService(commentRepository, postRepository, userRepository, db, validate)
+	commentController := controller.NewCommentController(commentService)
+	router := routes.NewRouter(userController, postController, authController, commentController)
 
 	return middleware.NewHandler(router)
 }
