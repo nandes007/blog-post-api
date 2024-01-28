@@ -3,14 +3,16 @@ package service
 import (
 	"context"
 	"database/sql"
-	"github.com/go-playground/validator/v10"
 	"log"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/helper/response"
 	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/post"
+	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/repository"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type PostServiceImpl struct {
@@ -62,8 +64,17 @@ func (service PostServiceImpl) Create(ctx context.Context, request post.CreateRe
 	return response.ToPostResponse(post)
 }
 
-func (service PostServiceImpl) FindAll(ctx context.Context) []post.Response {
-	posts := service.PostRepository.GetAll(ctx, service.DB)
+func (service PostServiceImpl) FindAll(ctx context.Context, token string) []post.Response {
+	userResponse := user.Response{}
+	tokenFormatted := jwt.FormatToken(token)
+	user, err := service.UserRepository.Find(ctx, service.DB, tokenFormatted)
+	helper.PanicIfError(err)
+
+	userResponse.Id = user.Id
+	userResponse.Name = user.Name
+	userResponse.Email = user.Email
+
+	posts := service.PostRepository.GetAll(ctx, service.DB, userResponse)
 	return response.ToPostsResponse(posts)
 }
 

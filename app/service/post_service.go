@@ -7,7 +7,7 @@ import (
 
 type PostService interface {
 	Create(ctx context.Context, request post.CreateRequest, token string) post.Response
-	FindAll(ctx context.Context) []post.Response
+	FindAll(ctx context.Context, token string) []post.Response
 	Find(ctx context.Context, id int) post.Response
 	Update(ctx context.Context, request post.CreateRequest, id int) post.Response
 	Delete(ctx context.Context, id int) bool

@@ -1,13 +1,14 @@
 package controller
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
 	"strconv"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type PostControllerImpl struct {
@@ -37,7 +38,8 @@ func (controller PostControllerImpl) Create(writer http.ResponseWriter, request 
 }
 
 func (controller PostControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	postsResponse := controller.PostService.FindAll(request.Context())
+	token := request.Header.Get("Authorization")
+	postsResponse := controller.PostService.FindAll(request.Context(), token)
 	apiResponse := web.ApiResponse{
 		Code:   200,
 		Status: "OK",

@@ -1,6 +1,8 @@
 package comment
 
+import "database/sql"
+
 type Request struct {
-	ParentId int    `json:"parent_id"`
-	Content  string `validate:"required" json:"content"`
+	ParentId sql.NullInt64 `json:"parent_id"`
+	Content  string        `validate:"required" json:"content"`
 }

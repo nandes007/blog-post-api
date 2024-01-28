@@ -7,6 +7,7 @@ import (
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/post"
+	"nandes007/blog-post-rest-api/model/web/user"
 )
 
 type PostRepositoryImpl struct {
@@ -31,7 +32,7 @@ func (repository PostRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user 
 	return post
 }
 
-func (repository PostRepositoryImpl) GetAll(ctx context.Context, db *sql.DB) []domain.Post {
+func (repository PostRepositoryImpl) GetAll(ctx context.Context, db *sql.DB, user user.Response) []domain.Post {
 	sqlQuery := "SELECT id, author_id, title, content, created_at FROM posts"
 	rows, err := db.QueryContext(ctx, sqlQuery)
 
@@ -48,6 +49,7 @@ func (repository PostRepositoryImpl) GetAll(ctx context.Context, db *sql.DB) []d
 		if err := rows.Scan(&post.Id, &post.AuthorId, &post.Title, &post.Content, &post.CreatedAt); err != nil {
 			log.Fatal(err)
 		}
+		post.User = user
 		posts = append(posts, post)
 	}
 

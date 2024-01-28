@@ -13,6 +13,7 @@ func ToPostResponse(postDomain domain.Post) post.Response {
 		Content:   postDomain.Content,
 		CreatedAt: postDomain.CreatedAt,
 		UpdatedAt: postDomain.UpdatedAt,
+		User:      postDomain.User,
 	}
 }
 
