@@ -18,7 +18,6 @@ import (
 
 func main() {
 	// env.Load()
-	fmt.Println("Changed")
 	db := app.NewDB()
 	validate := validator.New()
 	userRepository := repository.NewUserRepository()
