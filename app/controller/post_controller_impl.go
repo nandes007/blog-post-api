@@ -98,10 +98,23 @@ func (c PostControllerImpl) Find(w http.ResponseWriter, r *http.Request, ps http
 	})
 }
 
-func (c PostControllerImpl) Update(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (c PostControllerImpl) Update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	token := r.Header.Get("Authorization")
+	id, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
 	postRequest := post.UpdatePostRequest{}
 	helper.ReadFromRequestBody(r, &postRequest)
+	postRequest.ID = id
 	postResponse, err := c.PostService.Update(r.Context(), &postRequest, token)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
