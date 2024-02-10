@@ -21,21 +21,37 @@ func NewCommentController(commentService service.CommentService) CommentControll
 	}
 }
 
-func (c CommentControllerImpl) Save(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (c CommentControllerImpl) Save(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	req := comment.CommentRequest{}
 	helper.ReadFromRequestBody(r, &req)
 	token := r.Header.Get("Authorization")
-
-	postId, err := strconv.Atoi(p.ByName("postId"))
-	helper.PanicIfError(err)
+	postId, err := strconv.Atoi(ps.ByName("postId"))
+	if err != nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
 
 	response, err := c.CommentService.Save(r.Context(), &req, postId, token)
+	if err != nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
 
-	apiResponse := web.ApiResponse{
+	helper.WriteToResponseBody(w, &web.ApiResponse{
 		Code:   200,
 		Status: "OK",
 		Data:   response,
-	}
-
-	helper.WriteToResponseBody(w, apiResponse)
+	})
 }

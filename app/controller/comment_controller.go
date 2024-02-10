@@ -7,5 +7,5 @@ import (
 )
 
 type CommentController interface {
-	Save(w http.ResponseWriter, r *http.Request, p httprouter.Params)
+	Save(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 }
