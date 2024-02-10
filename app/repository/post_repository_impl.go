@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/model/web/user"
@@ -44,7 +45,7 @@ func (r postRepositoryImpl) Save(ctx context.Context, user *user.UserResponse, r
 }
 
 func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse) ([]*post.PostResponse, error) {
-	sqlQuery := "SELECT id, author_id, title, content, created_at FROM posts"
+	sqlQuery := "SELECT id, title, content, created_at, updated_at FROM posts"
 	rows, err := r.db.QueryContext(ctx, sqlQuery)
 	if err != nil {
 		return nil, err
@@ -55,9 +56,13 @@ func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse)
 
 	for rows.Next() {
 		post := &post.PostResponse{}
-		if err := rows.Scan(&post.Id, &post.Title, &post.Content, &post.CreatedAt, &post.UpdatedAt); err != nil {
+		var createdAt, updatedAt string
+		if err := rows.Scan(&post.Id, &post.Title, &post.Content, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
+		fmt.Println(createdAt)
+		post.CreatedAt, _ = time.Parse("2006-01-02T15:04:05.999999Z", createdAt)
+		post.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05.999", updatedAt)
 		post.User = *user
 		posts = append(posts, post)
 	}

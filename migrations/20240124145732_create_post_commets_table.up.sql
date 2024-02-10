@@ -4,5 +4,8 @@ CREATE TABLE post_comments
     post_id INT REFERENCES posts (id) NOT NULL,
     user_id INT REFERENCES users (id) NOT NULL,
     parent_id INT,
-    content TEXT
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );

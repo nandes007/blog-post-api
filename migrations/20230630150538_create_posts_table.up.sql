@@ -4,7 +4,7 @@ CREATE TABLE posts
     author_id INTEGER,
     title TEXT,
     content TEXT,
-    created_at date,
-    updated_at date,
-    deleted_at date
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
