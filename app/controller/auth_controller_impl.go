@@ -1,12 +1,13 @@
 package controller
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web"
 	"nandes007/blog-post-rest-api/model/web/auth"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type AuthControllerImpl struct {
@@ -23,7 +24,7 @@ func (controller *AuthControllerImpl) Login(writer http.ResponseWriter, request 
 	loginRequest := auth.LoginRequest{}
 	helper.ReadFromRequestBody(request, &loginRequest)
 
-	token, err := controller.AuthService.Login(request.Context(), loginRequest)
+	token, err := controller.AuthService.Login(request.Context(), &loginRequest)
 
 	if err != nil {
 		apiResponse := web.ApiResponse{
@@ -52,7 +53,7 @@ func (controller *AuthControllerImpl) Register(writer http.ResponseWriter, reque
 	helper.ReadFromRequestBody(request, &registerRequest)
 	apiResponse := web.ApiResponse{}
 
-	response, err := controller.AuthService.Register(request.Context(), registerRequest)
+	response, err := controller.AuthService.Register(request.Context(), &registerRequest)
 
 	if err != nil {
 		apiResponse.Code = 422

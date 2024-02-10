@@ -6,6 +6,6 @@ import (
 )
 
 type UserService interface {
-	FindAll(ctx context.Context) []user.Response
-	Find(ctx context.Context, token string) (user.Response, error)
+	FindAll(ctx context.Context) ([]*user.UserResponse, error)
+	Find(ctx context.Context, token string) (*user.UserResponse, error)
 }

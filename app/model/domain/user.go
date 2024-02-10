@@ -1,11 +1,13 @@
 package domain
 
+import "time"
+
 type User struct {
 	Id        int
 	Name      string
 	Email     string
 	Password  string
-	CreatedAt string
-	UpdatedAt string
-	DeletedAt string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
 }

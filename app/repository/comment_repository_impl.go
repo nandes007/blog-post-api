@@ -3,30 +3,37 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"nandes007/blog-post-rest-api/helper"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/comment"
+	"nandes007/blog-post-rest-api/model/web/post"
+	"nandes007/blog-post-rest-api/model/web/user"
 )
 
-type CommentRepositoryImpl struct {
+type commentRepositoryImpl struct {
+	db *sql.DB
 }
 
-func NewCommentRepository() CommentRepository {
-	return &CommentRepositoryImpl{}
+func NewCommentRepository(db *sql.DB) CommentRepository {
+	return &commentRepositoryImpl{
+		db: db,
+	}
 }
 
 // Save implements CommentRepository.
-func (c CommentRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user domain.User, post domain.Post, r comment.Request) domain.Comment {
-	comment := domain.Comment{}
+func (r commentRepositoryImpl) Save(ctx context.Context, user *user.UserResponse, post *post.PostResponse, req *comment.CommentRequest) (*comment.CommentResponse, error) {
 	var id int
 	sqlQuery := "INSERT INTO post_comments(post_id, user_id, parent_id, content) VALUES ($1, $2, $3, $4) RETURNING id"
-	err := tx.QueryRowContext(ctx, sqlQuery, post.Id, user.Id, r.ParentId, r.Content).Scan(&id)
-	helper.PanicIfError(err)
+	err := r.db.QueryRowContext(ctx, sqlQuery, post.Id, user.Id, req.ParentId, req.Content).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
 
-	comment.Id = id
-	comment.User = user
-	comment.Post = post
-	comment.ParentId = r.ParentId
-	comment.Content = r.Content
-	return comment
+	return &comment.CommentResponse{
+		Id:       id,
+		PostId:   post.Id,
+		UserId:   user.Id,
+		ParentId: req.ParentId,
+		Content:  req.Content,
+		User:     *user,
+		Post:     *post,
+	}, nil
 }

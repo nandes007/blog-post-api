@@ -20,20 +20,20 @@ func main() {
 	// env.Load()
 	db := app.NewDB()
 	validate := validator.New()
-	userRepository := repository.NewUserRepository()
-	userService := service.NewUserService(userRepository, db, validate)
+	userRepository := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepository, validate)
 	userController := controller.NewUserController(userService)
 
-	postRepository := repository.NewPostRepository()
-	postService := service.NewPostService(postRepository, userRepository, db, validate)
+	postRepository := repository.NewPostRepository(db)
+	postService := service.NewPostService(postRepository, userRepository, validate)
 	postController := controller.NewPostController(postService)
 
-	authRepository := repository.NewAuthRepository()
-	authService := service.NewAuthService(authRepository, db, validate)
+	authRepository := repository.NewAuthRepository(db)
+	authService := service.NewAuthService(authRepository, validate)
 	authController := controller.NewAuthController(authService)
 
-	commentRepository := repository.NewCommentRepository()
-	commentService := service.NewCommentService(commentRepository, postRepository, userRepository, db, validate)
+	commentRepository := repository.NewCommentRepository(db)
+	commentService := service.NewCommentService(commentRepository, postRepository, userRepository, validate)
 	commentController := controller.NewCommentController(commentService)
 
 	router := routes.NewRouter(userController, postController, authController, commentController)

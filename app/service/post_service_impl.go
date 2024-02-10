@@ -2,14 +2,9 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"log"
-	"nandes007/blog-post-rest-api/helper"
+	"fmt"
 	"nandes007/blog-post-rest-api/helper/jwt"
-	"nandes007/blog-post-rest-api/helper/response"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/post"
-	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/repository"
 
 	"github.com/go-playground/validator/v10"
@@ -18,97 +13,94 @@ import (
 type PostServiceImpl struct {
 	PostRepository repository.PostRepository
 	UserRepository repository.UserRepository
-	DB             *sql.DB
 	Validate       *validator.Validate
 }
 
-func NewPostService(postRepository repository.PostRepository, userRepository repository.UserRepository, DB *sql.DB, validate *validator.Validate) PostService {
+func NewPostService(postRepository repository.PostRepository, userRepository repository.UserRepository, validate *validator.Validate) PostService {
 	return &PostServiceImpl{
 		PostRepository: postRepository,
 		UserRepository: userRepository,
-		DB:             DB,
 		Validate:       validate,
 	}
 }
 
-func (service PostServiceImpl) Create(ctx context.Context, request post.CreateRequest, token string) post.Response {
-	//TODO implement me
-	err := service.Validate.Struct(request)
-	helper.PanicIfError(err)
-
-	tx, err := service.DB.Begin()
-	//helper.PanicIfError(err)
+func (s *PostServiceImpl) Create(ctx context.Context, req *post.PostRequest, token string) (*post.PostResponse, error) {
+	err := s.Validate.Struct(req)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error validate : ", err)
+		return nil, err
 	}
-	defer helper.CommitOrRollback(tx)
 
 	tokenFormatted := jwt.FormatToken(token)
-	user, err := service.UserRepository.Find(ctx, service.DB, tokenFormatted)
-
-	//helper.PanicIfError(err)
+	user, err := s.UserRepository.Find(ctx, tokenFormatted)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error when get user : ", err)
+		return nil, err
 	}
 
-	post := domain.Post{
-		AuthorId:  user.Id,
-		Title:     request.Title,
-		Content:   request.Content,
-		CreatedAt: helper.GetCurrentTime(),
-		UpdatedAt: helper.GetCurrentTime(),
+	post, err := s.PostRepository.Save(ctx, user, req)
+	if err != nil {
+		fmt.Println("Error when create post : ", err)
+		return nil, err
 	}
-
-	post = service.PostRepository.Save(ctx, tx, user, post)
-
-	return response.ToPostResponse(post)
+	return post, nil
 }
 
-func (service PostServiceImpl) FindAll(ctx context.Context, token string) []post.Response {
-	userResponse := user.Response{}
+func (s *PostServiceImpl) FindAll(ctx context.Context, token string) ([]*post.PostResponse, error) {
 	tokenFormatted := jwt.FormatToken(token)
-	user, err := service.UserRepository.Find(ctx, service.DB, tokenFormatted)
-	helper.PanicIfError(err)
-
-	userResponse.Id = user.Id
-	userResponse.Name = user.Name
-	userResponse.Email = user.Email
-
-	posts := service.PostRepository.GetAll(ctx, service.DB, userResponse)
-	return response.ToPostsResponse(posts)
-}
-
-func (service PostServiceImpl) Find(ctx context.Context, id int) post.Response {
-	post := service.PostRepository.Find(ctx, service.DB, id)
-	return response.ToPostResponse(post)
-}
-
-func (service PostServiceImpl) Update(ctx context.Context, request post.CreateRequest, id int) post.Response {
-	err := service.Validate.Struct(request)
-	tx, err := service.DB.Begin()
-
-	helper.PanicIfError(err)
-
-	defer helper.CommitOrRollback(tx)
-
-	service.PostRepository.Update(ctx, tx, request, id)
-
-	post := domain.Post{
-		Id:       id,
-		AuthorId: 1,
-		Title:    request.Title,
-		Content:  request.Content,
+	user, err := s.UserRepository.Find(ctx, tokenFormatted)
+	if err != nil {
+		fmt.Println("Error when get user : ", err)
+		return nil, err
 	}
 
-	return response.ToPostResponse(post)
+	posts, err := s.PostRepository.GetAll(ctx, user)
+	return posts, nil
 }
 
-func (service PostServiceImpl) Delete(ctx context.Context, id int) bool {
-	tx, err := service.DB.Begin()
-	helper.PanicIfError(err)
-	defer helper.CommitOrRollback(tx)
+func (s *PostServiceImpl) Find(ctx context.Context, token string, id int) (*post.PostResponse, error) {
+	tokenFormatted := jwt.FormatToken(token)
+	user, err := s.UserRepository.Find(ctx, tokenFormatted)
+	if err != nil {
+		fmt.Println("Error when get user : ", err)
+		return nil, err
+	}
 
-	service.PostRepository.Delete(ctx, tx, id)
+	post, err := s.PostRepository.Find(ctx, user, id)
+	if err != nil {
+		fmt.Println("Error when get post : ", err)
+	}
+	return post, nil
+}
 
-	return true
+func (s *PostServiceImpl) Update(ctx context.Context, req *post.UpdatePostRequest, token string) (*post.PostResponse, error) {
+	err := s.Validate.Struct(req)
+	if err != nil {
+		fmt.Println("Error validate : ", err)
+		return nil, err
+	}
+
+	tokenFormatted := jwt.FormatToken(token)
+	user, err := s.UserRepository.Find(ctx, tokenFormatted)
+	if err != nil {
+		fmt.Println("Error when get user : ", err)
+		return nil, err
+	}
+
+	post, err := s.PostRepository.Update(ctx, req, user)
+	if err != nil {
+		fmt.Println("Error when update post : ", err)
+	}
+
+	return post, nil
+}
+
+func (s *PostServiceImpl) Delete(ctx context.Context, id int) error {
+	err := s.PostRepository.Delete(ctx, id)
+	if err != nil {
+		fmt.Println("Error when delete post : ", err)
+		return err
+	}
+
+	return nil
 }

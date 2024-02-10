@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/comment"
+	"nandes007/blog-post-rest-api/model/web/post"
+	"nandes007/blog-post-rest-api/model/web/user"
 )
 
 type CommentRepository interface {
-	Save(ctx context.Context, tx *sql.Tx, user domain.User, post domain.Post, r comment.Request) domain.Comment
+	Save(ctx context.Context, user *user.UserResponse, post *post.PostResponse, r *comment.CommentRequest) (*comment.CommentResponse, error)
 }

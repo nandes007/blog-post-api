@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type UserControllerImpl struct {
@@ -19,7 +20,10 @@ func NewUserController(userService service.UserService) UserController {
 }
 
 func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userResponse := controller.UserService.FindAll(request.Context())
+	userResponse, err := controller.UserService.FindAll(request.Context())
+	if err != nil {
+		panic(err)
+	}
 	apiResponse := web.ApiResponse{
 		Code:   200,
 		Status: "Success",

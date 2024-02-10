@@ -2,10 +2,8 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"nandes007/blog-post-rest-api/helper"
+	"fmt"
 	"nandes007/blog-post-rest-api/helper/jwt"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/comment"
 	"nandes007/blog-post-rest-api/repository"
 
@@ -16,34 +14,40 @@ type CommentServiceImpl struct {
 	CommentRepository repository.CommentRepository
 	PostRepository    repository.PostRepository
 	UserRepository    repository.UserRepository
-	DB                *sql.DB
 	Validate          *validator.Validate
 }
 
-func NewCommentService(commentRepository repository.CommentRepository, postRepository repository.PostRepository, userRepository repository.UserRepository, DB *sql.DB, validate *validator.Validate) CommentService {
+func NewCommentService(commentRepository repository.CommentRepository, postRepository repository.PostRepository, userRepository repository.UserRepository, validate *validator.Validate) CommentService {
 	return &CommentServiceImpl{
 		CommentRepository: commentRepository,
 		PostRepository:    postRepository,
 		UserRepository:    userRepository,
-		DB:                DB,
 		Validate:          validate,
 	}
 }
 
-func (cs CommentServiceImpl) Save(ctx context.Context, r comment.Request, postId int, token string) domain.Comment {
-	err := cs.Validate.Struct(r)
-	helper.PanicIfError(err)
-
-	tx, err := cs.DB.Begin()
-	helper.PanicIfError(err)
-	defer helper.CommitOrRollback(tx)
+func (r *CommentServiceImpl) Save(ctx context.Context, req *comment.CommentRequest, postId int, token string) (*comment.CommentResponse, error) {
+	err := r.Validate.Struct(req)
+	if err != nil {
+		fmt.Println("Error validate : ", err)
+		return nil, err
+	}
 
 	tokenFormatted := jwt.FormatToken(token)
-	user, err := cs.UserRepository.Find(ctx, cs.DB, tokenFormatted)
-	helper.PanicIfError(err)
+	user, err := r.UserRepository.Find(ctx, tokenFormatted)
+	if err != nil {
+		fmt.Println("Error when get user : ", err)
+		return nil, err
+	}
 
-	post := cs.PostRepository.Find(ctx, cs.DB, postId)
+	post, err := r.PostRepository.Find(ctx, user, postId)
+	if err != nil {
+		fmt.Println("Error when get post : ", err)
+	}
 
-	comment := cs.CommentRepository.Save(ctx, tx, user, post, r)
-	return comment
+	postComment, err := r.CommentRepository.Save(ctx, user, post, req)
+	if err != nil {
+		fmt.Println("Error when create comment : ", err)
+	}
+	return postComment, nil
 }

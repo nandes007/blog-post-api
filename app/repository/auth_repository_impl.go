@@ -4,27 +4,33 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/hash"
 	"nandes007/blog-post-rest-api/helper/jwt"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/auth"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthRepositoryImpl struct {
+type authRepositoryImpl struct {
+	db *sql.DB
 }
 
-func NewAuthRepository() AuthRepository {
-	return &AuthRepositoryImpl{}
+func NewAuthRepository(db *sql.DB) AuthRepository {
+	return &authRepositoryImpl{
+		db: db,
+	}
 }
 
-func (repository AuthRepositoryImpl) Login(ctx context.Context, db *sql.DB, request auth.LoginRequest) (string, error) {
-	stmt, err := db.Prepare("SELECT id, email, password FROM users WHERE email = $1 LIMIT 1")
-	helper.PanicIfError(err)
+func (r *authRepositoryImpl) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+	stmt, err := r.db.Prepare("SELECT id, email, password FROM users WHERE email = $1 LIMIT 1")
+	if err != nil {
+		return nil, err
+	}
 
 	defer stmt.Close()
-	row := stmt.QueryRowContext(ctx, request.Email)
+	row := stmt.QueryRowContext(ctx, req.Email)
 
 	var id int
 	var (
@@ -35,32 +41,47 @@ func (repository AuthRepositoryImpl) Login(ctx context.Context, db *sql.DB, requ
 	err = row.Scan(&id, &email, &password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", errors.New("credential mismatch")
+			return nil, errors.New("credential mismatch")
 		} else {
-			helper.PanicIfError(err)
+			return nil, err
 		}
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(request.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(req.Password))
 	if err != nil {
-		return "", errors.New("credential mismatch")
+		return nil, errors.New("credential mismatch")
 	}
 
 	tokenString, err := jwt.CreateToken(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return tokenString, nil
+	return &auth.LoginResponse{
+		Token: tokenString,
+	}, nil
 }
 
-func (repository AuthRepositoryImpl) Register(ctx context.Context, tx *sql.Tx, user domain.User) (domain.User, error) {
-	currentDate := helper.GetCurrentTime()
-	passwordHashed := hash.PasswordHash(user.Password)
-	stmt := "INSERT INTO users(name, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
-
+func (r *authRepositoryImpl) Register(ctx context.Context, req *auth.RegisterRequest) (*auth.RegisterResponse, error) {
 	var id int
-	err := tx.QueryRowContext(ctx, stmt, user.Name, user.Email, passwordHashed, currentDate, currentDate).Scan(&id)
-	helper.PanicIfError(err)
+	passwordHashed := hash.PasswordHash(req.Password)
 
-	user.Id = id
-	return user, nil
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer helper.CommitOrRollback(tx)
+	stmt := "INSERT INTO users(name, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+	err = tx.QueryRowContext(ctx, stmt, req.Name, req.Email, passwordHashed, time.Now(), time.Now()).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth.RegisterResponse{
+		Id:        id,
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}, nil
 }

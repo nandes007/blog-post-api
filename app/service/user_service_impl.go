@@ -2,50 +2,42 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"github.com/go-playground/validator/v10"
-	"log"
-	"nandes007/blog-post-rest-api/helper"
-	"nandes007/blog-post-rest-api/helper/response"
-	"nandes007/blog-post-rest-api/model/domain"
+	"fmt"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/repository"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type UserServiceImpl struct {
 	UserRepository repository.UserRepository
-	DB             *sql.DB
 	Validate       *validator.Validate
 }
 
-func NewUserService(userRepository repository.UserRepository, DB *sql.DB, validate *validator.Validate) UserService {
+func NewUserService(userRepository repository.UserRepository, validate *validator.Validate) UserService {
 	return &UserServiceImpl{
 		UserRepository: userRepository,
-		DB:             DB,
 		Validate:       validate,
 	}
 }
 
-func (service *UserServiceImpl) FindAll(ctx context.Context) []user.Response {
-	tx, err := service.DB.Begin()
-	helper.PanicIfError(err)
-	defer helper.CommitOrRollback(tx)
-
-	users := service.UserRepository.GetAll(ctx, tx)
-	return response.ToUserResponses(users)
+func (s *UserServiceImpl) FindAll(ctx context.Context) ([]*user.UserResponse, error) {
+	users, err := s.UserRepository.GetAll(ctx)
+	if err != nil {
+		fmt.Println("Error when get all users : ", err)
+	}
+	return users, nil
 }
 
-func (service *UserServiceImpl) Find(ctx context.Context, token string) (user.Response, error) {
-	var user domain.User
+func (s *UserServiceImpl) Find(ctx context.Context, token string) (*user.UserResponse, error) {
 	tokenFormatted := strings.Replace(token, "Bearer ", "", 1)
-
-	user, err := service.UserRepository.Find(ctx, service.DB, tokenFormatted)
+	user, err := s.UserRepository.Find(ctx, tokenFormatted)
 
 	if err != nil {
-		log.Fatal(err)
-		return response.ToUserResponse(user), err
+		fmt.Println("Error when get user : ", err)
+		return nil, err
 	}
 
-	return response.ToUserResponse(user), nil
+	return user, nil
 }

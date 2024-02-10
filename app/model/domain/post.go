@@ -1,14 +1,15 @@
 package domain
 
-import "nandes007/blog-post-rest-api/model/web/user"
+import (
+	"time"
+)
 
 type Post struct {
-	Id        int
-	AuthorId  int
-	Title     string
-	Content   string
-	CreatedAt string
-	UpdatedAt string
-	DeletedAt string
-	User      user.Response
+	Id        int        `json:"id"`
+	AuthorId  int        `json:"author_id"`
+	Title     string     `json:"title"`
+	Content   string     `json:"content"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
 }

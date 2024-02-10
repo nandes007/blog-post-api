@@ -2,16 +2,14 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/model/web/user"
 )
 
 type PostRepository interface {
-	Save(ctx context.Context, tx *sql.Tx, user domain.User, post domain.Post) domain.Post
-	GetAll(ctx context.Context, db *sql.DB, user user.Response) []domain.Post
-	Find(ctx context.Context, db *sql.DB, id int) domain.Post
-	Update(ctx context.Context, tx *sql.Tx, post post.CreateRequest, id int) bool
-	Delete(ctx context.Context, tx *sql.Tx, id int) bool
+	Save(ctx context.Context, user *user.UserResponse, post *post.PostRequest) (*post.PostResponse, error)
+	GetAll(ctx context.Context, user *user.UserResponse) ([]*post.PostResponse, error)
+	Find(ctx context.Context, user *user.UserResponse, id int) (*post.PostResponse, error)
+	Update(ctx context.Context, req *post.UpdatePostRequest, user *user.UserResponse) (*post.PostResponse, error)
+	Delete(ctx context.Context, id int) error
 }

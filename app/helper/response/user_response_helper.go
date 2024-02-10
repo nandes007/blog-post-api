@@ -5,16 +5,16 @@ import (
 	"nandes007/blog-post-rest-api/model/web/user"
 )
 
-func ToUserResponse(userDomain domain.User) user.Response {
-	return user.Response{
+func ToUserResponse(userDomain domain.User) user.UserResponse {
+	return user.UserResponse{
 		Id:    userDomain.Id,
 		Name:  userDomain.Name,
 		Email: userDomain.Email,
 	}
 }
 
-func ToUserResponses(users []domain.User) []user.Response {
-	var userResponses []user.Response
+func ToUserResponses(users []domain.User) []user.UserResponse {
+	var userResponses []user.UserResponse
 	for _, user := range users {
 		userResponses = append(userResponses, ToUserResponse(user))
 	}

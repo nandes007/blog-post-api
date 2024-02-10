@@ -22,14 +22,14 @@ func NewCommentController(commentService service.CommentService) CommentControll
 }
 
 func (c CommentControllerImpl) Save(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	request := comment.Request{}
-	helper.ReadFromRequestBody(r, &request)
+	req := comment.CommentRequest{}
+	helper.ReadFromRequestBody(r, &req)
 	token := r.Header.Get("Authorization")
 
 	postId, err := strconv.Atoi(p.ByName("postId"))
 	helper.PanicIfError(err)
 
-	response := c.CommentService.Save(r.Context(), request, postId, token)
+	response, err := c.CommentService.Save(r.Context(), &req, postId, token)
 
 	apiResponse := web.ApiResponse{
 		Code:   200,

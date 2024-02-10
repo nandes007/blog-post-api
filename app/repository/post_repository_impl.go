@@ -3,119 +3,112 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"log"
 	"nandes007/blog-post-rest-api/helper"
-	"nandes007/blog-post-rest-api/model/domain"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/model/web/user"
+	"time"
 )
 
-type PostRepositoryImpl struct {
+type postRepositoryImpl struct {
+	db *sql.DB
 }
 
-func NewPostRepository() PostRepository {
-	return &PostRepositoryImpl{}
+func NewPostRepository(db *sql.DB) PostRepository {
+	return &postRepositoryImpl{
+		db: db,
+	}
 }
 
-func (repository PostRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user domain.User, post domain.Post) domain.Post {
-	//TODO implement me
-	currentDate := helper.GetCurrentTime()
-	sqlQuery := "INSERT INTO posts(author_id, title, content, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+func (r postRepositoryImpl) Save(ctx context.Context, user *user.UserResponse, req *post.PostRequest) (*post.PostResponse, error) {
 	var id int
-	err := tx.QueryRowContext(ctx, sqlQuery, user.Id, post.Title, post.Content, currentDate, currentDate).Scan(&id)
-
+	tx, err := r.db.Begin()
 	if err != nil {
-		helper.PanicIfError(err)
+		return nil, err
 	}
 
-	post.Id = id
-	return post
+	defer helper.CommitOrRollback(tx)
+	sqlQuery := "INSERT INTO posts(author_id, title, content, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+	err = tx.QueryRowContext(ctx, sqlQuery, user.Id, req.Title, req.Content, time.Now(), time.Now()).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &post.PostResponse{
+		Id:        id,
+		Title:     req.Title,
+		Content:   req.Content,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		User:      *user,
+	}, nil
 }
 
-func (repository PostRepositoryImpl) GetAll(ctx context.Context, db *sql.DB, user user.Response) []domain.Post {
+func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse) ([]*post.PostResponse, error) {
 	sqlQuery := "SELECT id, author_id, title, content, created_at FROM posts"
-	rows, err := db.QueryContext(ctx, sqlQuery)
-
+	rows, err := r.db.QueryContext(ctx, sqlQuery)
 	if err != nil {
-		helper.PanicIfError(err)
+		return nil, err
 	}
 
 	defer rows.Close()
-
-	var posts []domain.Post
+	var posts []*post.PostResponse
 
 	for rows.Next() {
-		post := domain.Post{}
-		if err := rows.Scan(&post.Id, &post.AuthorId, &post.Title, &post.Content, &post.CreatedAt); err != nil {
-			log.Fatal(err)
+		post := &post.PostResponse{}
+		if err := rows.Scan(&post.Id, &post.Title, &post.Content, &post.CreatedAt, &post.UpdatedAt); err != nil {
+			return nil, err
 		}
-		post.User = user
+		post.User = *user
 		posts = append(posts, post)
 	}
 
-	rerr := rows.Close()
-
-	if rerr != nil {
-		log.Fatal(rerr)
+	err = rows.Close()
+	if err != nil {
+		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return posts
+	return posts, nil
 }
 
-func (repository PostRepositoryImpl) Find(ctx context.Context, db *sql.DB, id int) domain.Post {
-	//TODO implement me
+func (r postRepositoryImpl) Find(ctx context.Context, user *user.UserResponse, id int) (*post.PostResponse, error) {
 	sqlQuery := "SELECT id, author_id, title, content, created_at FROM posts WHERE id = $1 LIMIT 1"
-	row := db.QueryRowContext(ctx, sqlQuery, id)
-	var post domain.Post
-
-	err := row.Scan(&post.Id, &post.AuthorId, &post.Title, &post.Content, &post.CreatedAt)
-
+	row := r.db.QueryRowContext(ctx, sqlQuery, id)
+	post := &post.PostResponse{}
+	err := row.Scan(&post.Id, &post.Title, &post.Content, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
-		//helper.PanicIfError(err)
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return post
+	post.User = *user
+	return post, nil
 }
 
-func (repository PostRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, post post.CreateRequest, id int) bool {
-	//TODO implement me
-	currentDate := helper.GetCurrentTime()
+func (r postRepositoryImpl) Update(ctx context.Context, req *post.UpdatePostRequest, user *user.UserResponse) (*post.PostResponse, error) {
 	sqlQuery := "UPDATE posts SET title = $1, content = $2, updated_at = $3 WHERE id = $4"
-	result, err := tx.ExecContext(ctx, sqlQuery, post.Title, post.Content, currentDate, id)
-
-	helper.PanicIfError(err)
-
-	rows, err := result.RowsAffected()
-
-	helper.PanicIfError(err)
-
-	if rows != 1 {
-		log.Fatal("Error")
-		return false
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
 	}
 
-	return true
+	defer helper.CommitOrRollback(tx)
+	_, err = tx.ExecContext(ctx, sqlQuery, req.Title, req.Content, time.Now(), req.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Find(context.Background(), user, req.ID)
 }
 
-func (repository PostRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, id int) bool {
+func (r postRepositoryImpl) Delete(ctx context.Context, id int) error {
 	sqlQuery := "DELETE FROM posts WHERE id = $1"
-	result, err := tx.ExecContext(ctx, sqlQuery, id)
-
-	helper.PanicIfError(err)
-
-	rows, err := result.RowsAffected()
-
-	helper.PanicIfError(err)
-
-	if rows != 1 {
-		log.Fatal("error")
-		return false
+	_, err := r.db.ExecContext(ctx, sqlQuery, id)
+	if err != nil {
+		return err
 	}
 
-	return true
+	return nil
 }

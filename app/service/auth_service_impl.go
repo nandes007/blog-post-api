@@ -2,59 +2,46 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"github.com/go-playground/validator/v10"
-	"nandes007/blog-post-rest-api/helper"
-	"nandes007/blog-post-rest-api/helper/response"
-	"nandes007/blog-post-rest-api/model/domain"
+	"fmt"
 	"nandes007/blog-post-rest-api/model/web/auth"
 	"nandes007/blog-post-rest-api/repository"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthServiceImpl struct {
 	AuthRepository repository.AuthRepository
-	DB             *sql.DB
 	Validate       *validator.Validate
 }
 
-func NewAuthService(authRepository repository.AuthRepository, DB *sql.DB, validate *validator.Validate) AuthService {
+func NewAuthService(authRepository repository.AuthRepository, validate *validator.Validate) AuthService {
 	return &AuthServiceImpl{
 		AuthRepository: authRepository,
-		DB:             DB,
 		Validate:       validate,
 	}
 }
 
-func (service *AuthServiceImpl) Login(ctx context.Context, request auth.LoginRequest) (string, error) {
-	generateToken, err := service.AuthRepository.Login(ctx, service.DB, request)
-
+func (s *AuthServiceImpl) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+	token, err := s.AuthRepository.Login(ctx, req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return response.ToUserLoginResponse(generateToken), nil
+	return token, nil
 }
 
-func (service *AuthServiceImpl) Register(ctx context.Context, request auth.RegisterRequest) (auth.RegisterResponse, error) {
-	err := service.Validate.Struct(request)
-	response := auth.RegisterResponse{}
-	helper.PanicIfError(err)
-
-	tx, err := service.DB.Begin()
-	helper.PanicIfError(err)
-	defer helper.CommitOrRollback(tx)
-
-	user := domain.User{
-		Name:     request.Name,
-		Email:    request.Email,
-		Password: request.Password,
+func (s *AuthServiceImpl) Register(ctx context.Context, req *auth.RegisterRequest) (*auth.RegisterResponse, error) {
+	err := s.Validate.Struct(req)
+	if err != nil {
+		fmt.Println("Error validate : ", err)
+		return nil, err
 	}
 
-	user, err = service.AuthRepository.Register(ctx, tx, user)
-	helper.PanicIfError(err)
+	createdUser, err := s.AuthRepository.Register(ctx, req)
+	if err != nil {
+		fmt.Println("Failed registration user : ", err)
+		return nil, err
+	}
 
-	response.Name = user.Name
-	response.Email = user.Email
-
-	return response, nil
+	return createdUser, nil
 }

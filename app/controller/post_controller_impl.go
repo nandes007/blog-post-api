@@ -22,12 +22,14 @@ func NewPostController(postService service.PostService) PostController {
 }
 
 func (controller PostControllerImpl) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	//TODO implement me
-	postCreateRequest := post.CreateRequest{}
+	postCreateRequest := post.PostRequest{}
 	helper.ReadFromRequestBody(request, &postCreateRequest)
 	token := request.Header.Get("Authorization")
 
-	postResponse := controller.PostService.Create(request.Context(), postCreateRequest, token)
+	postResponse, err := controller.PostService.Create(request.Context(), &postCreateRequest, token)
+	if err != nil {
+		panic(err)
+	}
 	apiResponse := web.ApiResponse{
 		Code:   201,
 		Status: "OK",
@@ -39,7 +41,10 @@ func (controller PostControllerImpl) Create(writer http.ResponseWriter, request 
 
 func (controller PostControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	token := request.Header.Get("Authorization")
-	postsResponse := controller.PostService.FindAll(request.Context(), token)
+	postsResponse, err := controller.PostService.FindAll(request.Context(), token)
+	if err != nil {
+		panic(err)
+	}
 	apiResponse := web.ApiResponse{
 		Code:   200,
 		Status: "OK",
@@ -50,11 +55,15 @@ func (controller PostControllerImpl) FindAll(writer http.ResponseWriter, request
 }
 
 func (controller PostControllerImpl) Find(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	token := request.Header.Get("Authorization")
 	id, err := strconv.Atoi(params.ByName("id"))
 
 	helper.PanicIfError(err)
 
-	postResponse := controller.PostService.Find(request.Context(), id)
+	postResponse, err := controller.PostService.Find(request.Context(), token, id)
+	if err != nil {
+		panic(err)
+	}
 
 	apiResponse := web.ApiResponse{
 		Code:   200,
@@ -66,12 +75,14 @@ func (controller PostControllerImpl) Find(writer http.ResponseWriter, request *h
 }
 
 func (controller PostControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	id, err := strconv.Atoi(params.ByName("id"))
-	postRequest := post.CreateRequest{}
+	token := request.Header.Get("Authorization")
+	postRequest := post.UpdatePostRequest{}
 	helper.ReadFromRequestBody(request, &postRequest)
 
-	helper.PanicIfError(err)
-	postResponse := controller.PostService.Update(request.Context(), postRequest, id)
+	postResponse, err := controller.PostService.Update(request.Context(), &postRequest, token)
+	if err != nil {
+		panic(err)
+	}
 	apiResponse := web.ApiResponse{
 		Code:   200,
 		Status: "OK",
