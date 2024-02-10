@@ -20,55 +20,46 @@ func NewAuthController(authService service.AuthService) AuthController {
 	}
 }
 
-func (controller *AuthControllerImpl) Login(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (c *AuthControllerImpl) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	loginRequest := auth.LoginRequest{}
-	helper.ReadFromRequestBody(request, &loginRequest)
-
-	token, err := controller.AuthService.Login(request.Context(), &loginRequest)
-
+	helper.ReadFromRequestBody(r, &loginRequest)
+	token, err := c.AuthService.Login(r.Context(), &loginRequest)
 	if err != nil {
-		apiResponse := web.ApiResponse{
-			Code:   400,
-			Status: "Bad Request",
-			Data:   err.Error(),
-		}
-
-		writer.Header().Add("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusBadRequest)
-		helper.WriteToResponseBody(writer, apiResponse)
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
 		return
 	}
 
-	apiResponse := web.ApiResponse{
+	helper.WriteToResponseBody(w, &web.ApiResponse{
 		Code:   200,
 		Status: "Success",
 		Data:   token,
-	}
-
-	helper.WriteToResponseBody(writer, apiResponse)
+	})
 }
 
-func (controller *AuthControllerImpl) Register(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (c *AuthControllerImpl) Register(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	registerRequest := auth.RegisterRequest{}
-	helper.ReadFromRequestBody(request, &registerRequest)
-	apiResponse := web.ApiResponse{}
-
-	response, err := controller.AuthService.Register(request.Context(), &registerRequest)
-
+	helper.ReadFromRequestBody(r, &registerRequest)
+	response, err := c.AuthService.Register(r.Context(), &registerRequest)
 	if err != nil {
-		apiResponse.Code = 422
-		apiResponse.Status = "Bad Request"
-		apiResponse.Data = err.Error()
-
-		writer.Header().Add("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusBadRequest)
-		helper.WriteToResponseBody(writer, apiResponse)
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
 		return
 	}
 
-	apiResponse.Code = 200
-	apiResponse.Status = "OK"
-	apiResponse.Data = response
-
-	helper.WriteToResponseBody(writer, apiResponse)
+	helper.WriteToResponseBody(w, &web.ApiResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   response,
+	})
 }

@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type UserController interface {
-	FindAll(write http.ResponseWriter, request *http.Request, params httprouter.Params)
-	Find(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	FindAll(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
+	Find(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 }
