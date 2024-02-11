@@ -55,16 +55,9 @@ func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse)
 
 	for rows.Next() {
 		post := &post.PostResponse{}
-		var createdAt, updatedAt string
-		if err := rows.Scan(&post.Id, &post.Title, &post.Content, &createdAt, &updatedAt); err != nil {
+		if err := rows.Scan(&post.Id, &post.Title, &post.Content, &post.CreatedAt, &post.UpdatedAt); err != nil {
 			return nil, err
 		}
-		parseCreatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", createdAt)
-		parseUpdatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", updatedAt)
-		formattedCreatedAt := parseCreatedAt.Format("2006-01-02 15:04:05")
-		formattedUpdatedAt := parseUpdatedAt.Format("2006-01-02 15:04:05")
-		post.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedCreatedAt)
-		post.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedUpdatedAt)
 		post.User = *user
 		posts = append(posts, post)
 	}
@@ -82,21 +75,13 @@ func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse)
 }
 
 func (r postRepositoryImpl) Find(ctx context.Context, user *user.UserResponse, id int) (*post.PostResponse, error) {
-	var createdAt, updatedAt string
 	sqlQuery := "SELECT id, title, content, created_at, updated_at FROM posts WHERE id = $1 LIMIT 1"
 	row := r.db.QueryRowContext(ctx, sqlQuery, id)
 	post := &post.PostResponse{}
-	err := row.Scan(&post.Id, &post.Title, &post.Content, &createdAt, &updatedAt)
+	err := row.Scan(&post.Id, &post.Title, &post.Content, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
-
-	parseCreatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", createdAt)
-	parseUpdatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", updatedAt)
-	formattedCreatedAt := parseCreatedAt.Format("2006-01-02 15:04:05")
-	formattedUpdatedAt := parseUpdatedAt.Format("2006-01-02 15:04:05")
-	post.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedCreatedAt)
-	post.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedUpdatedAt)
 	post.User = *user
 	return post, nil
 }

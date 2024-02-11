@@ -2,12 +2,15 @@ services:
   app:
     build:
       context: ./app
+      dockerfile: dev.Dockerfile  # For development env
     depends_on:
       - app-database
     environment:
       - production
     ports:
       - 9001:9001
+    volumes:
+      - ./app:/app # For development env
 
   app-database:
     image: postgres
