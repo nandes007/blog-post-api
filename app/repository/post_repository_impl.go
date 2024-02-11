@@ -88,13 +88,7 @@ func (r postRepositoryImpl) Find(ctx context.Context, user *user.UserResponse, i
 
 func (r postRepositoryImpl) Update(ctx context.Context, req *post.UpdatePostRequest, user *user.UserResponse) (*post.PostResponse, error) {
 	sqlQuery := "UPDATE posts SET title = $1, content = $2, updated_at = $3 WHERE id = $4"
-	tx, err := r.db.Begin()
-	if err != nil {
-		return nil, err
-	}
-
-	defer helper.CommitOrRollback(tx)
-	_, err = tx.ExecContext(ctx, sqlQuery, req.Title, req.Content, time.Now(), req.ID)
+	_, err := r.db.ExecContext(ctx, sqlQuery, req.Title, req.Content, time.Now(), req.ID)
 	if err != nil {
 		return nil, err
 	}

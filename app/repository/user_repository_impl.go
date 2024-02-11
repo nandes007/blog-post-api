@@ -46,7 +46,7 @@ func (r *userRepositoryImpl) Find(ctx context.Context, token string) (*user.User
 }
 
 func (r *userRepositoryImpl) GetAll(ctx context.Context) ([]*user.UserResponse, error) {
-	SqlQuery := "SELECT id, name, email FROM users"
+	SqlQuery := "SELECT id, name, email, created_at, updated_at FROM users"
 	rows, err := r.db.QueryContext(ctx, SqlQuery)
 	helper.PanicIfError(err)
 	defer rows.Close()
@@ -54,7 +54,7 @@ func (r *userRepositoryImpl) GetAll(ctx context.Context) ([]*user.UserResponse, 
 	var users []*user.UserResponse
 	for rows.Next() {
 		user := &user.UserResponse{}
-		err := rows.Scan(&user.Id, &user.Name, &user.Email)
+		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
