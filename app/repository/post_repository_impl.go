@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/model/web/user"
@@ -60,9 +59,12 @@ func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse)
 		if err := rows.Scan(&post.Id, &post.Title, &post.Content, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
-		fmt.Println(createdAt)
-		post.CreatedAt, _ = time.Parse("2006-01-02T15:04:05.999999Z", createdAt)
-		post.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05.999", updatedAt)
+		parseCreatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", createdAt)
+		parseUpdatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", updatedAt)
+		formattedCreatedAt := parseCreatedAt.Format("2006-01-02 15:04:05")
+		formattedUpdatedAt := parseUpdatedAt.Format("2006-01-02 15:04:05")
+		post.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedCreatedAt)
+		post.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedUpdatedAt)
 		post.User = *user
 		posts = append(posts, post)
 	}
@@ -80,14 +82,21 @@ func (r postRepositoryImpl) GetAll(ctx context.Context, user *user.UserResponse)
 }
 
 func (r postRepositoryImpl) Find(ctx context.Context, user *user.UserResponse, id int) (*post.PostResponse, error) {
-	sqlQuery := "SELECT id, author_id, title, content, created_at FROM posts WHERE id = $1 LIMIT 1"
+	var createdAt, updatedAt string
+	sqlQuery := "SELECT id, title, content, created_at, updated_at FROM posts WHERE id = $1 LIMIT 1"
 	row := r.db.QueryRowContext(ctx, sqlQuery, id)
 	post := &post.PostResponse{}
-	err := row.Scan(&post.Id, &post.Title, &post.Content, &post.CreatedAt, &post.UpdatedAt)
+	err := row.Scan(&post.Id, &post.Title, &post.Content, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
 
+	parseCreatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", createdAt)
+	parseUpdatedAt, _ := time.Parse("2006-01-02T15:04:05.999999Z", updatedAt)
+	formattedCreatedAt := parseCreatedAt.Format("2006-01-02 15:04:05")
+	formattedUpdatedAt := parseUpdatedAt.Format("2006-01-02 15:04:05")
+	post.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedCreatedAt)
+	post.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", formattedUpdatedAt)
 	post.User = *user
 	return post, nil
 }
