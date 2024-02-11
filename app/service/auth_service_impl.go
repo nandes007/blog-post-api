@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web/auth"
 	"nandes007/blog-post-rest-api/repository"
 
@@ -22,6 +23,8 @@ func NewAuthService(authRepository repository.AuthRepository, validate *validato
 }
 
 func (s *AuthServiceImpl) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+	err := s.Validate.Struct(req)
+	helper.PanicIfError(err)
 	token, err := s.AuthRepository.Login(ctx, req)
 	if err != nil {
 		return nil, err
@@ -32,11 +35,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *auth.LoginRequest) (*a
 
 func (s *AuthServiceImpl) Register(ctx context.Context, req *auth.RegisterRequest) (*auth.RegisterResponse, error) {
 	err := s.Validate.Struct(req)
-	if err != nil {
-		fmt.Println("Error validate : ", err)
-		return nil, err
-	}
-
+	helper.PanicIfError(err)
 	createdUser, err := s.AuthRepository.Register(ctx, req)
 	if err != nil {
 		fmt.Println("Failed registration user : ", err)

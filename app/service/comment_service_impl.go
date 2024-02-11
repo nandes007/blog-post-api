@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/model/web/comment"
 	"nandes007/blog-post-rest-api/repository"
@@ -28,10 +29,7 @@ func NewCommentService(commentRepository repository.CommentRepository, postRepos
 
 func (r *CommentServiceImpl) Save(ctx context.Context, req *comment.CommentRequest, postId int, token string) (*comment.CommentResponse, error) {
 	err := r.Validate.Struct(req)
-	if err != nil {
-		fmt.Println("Error validate : ", err)
-		return nil, err
-	}
+	helper.PanicIfError(err)
 
 	tokenFormatted := jwt.FormatToken(token)
 	user, err := r.UserRepository.Find(ctx, tokenFormatted)

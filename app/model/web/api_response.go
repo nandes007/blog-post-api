@@ -11,3 +11,9 @@ type ErrorResponse struct {
 	Status string      `json:"status"`
 	Error  interface{} `json:"error"`
 }
+
+type ValidationErrorResponse struct {
+	Code   int                    `json:"code"`
+	Status string                 `json:"status"`
+	Errors map[string]interface{} `json:"errors"`
+}

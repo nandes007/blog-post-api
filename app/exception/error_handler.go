@@ -1,10 +1,12 @@
 package exception
 
 import (
-	"github.com/go-playground/validator/v10"
+	"fmt"
 	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interface{}) {
@@ -29,10 +31,16 @@ func validationErrors(writer http.ResponseWriter, request *http.Request, err int
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusBadRequest)
 
-		apiResponse := web.ApiResponse{
-			Code:   http.StatusBadRequest,
-			Status: "Bad Request",
-			Data:   exception.Error(),
+		var errors []string
+		validationErr := make(map[string]interface{})
+		for _, err := range exception {
+			errors = append(errors, fmt.Sprintf("%s is %s", err.Field(), err.Tag()))
+		}
+		validationErr["errors"] = errors
+		apiResponse := web.ValidationErrorResponse{
+			Code:   http.StatusUnprocessableEntity,
+			Status: "Unprocessable Entity",
+			Errors: map[string]interface{}{"errors": errors},
 		}
 
 		helper.WriteToResponseBody(writer, apiResponse)

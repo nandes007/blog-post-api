@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/repository"
@@ -26,10 +27,7 @@ func NewPostService(postRepository repository.PostRepository, userRepository rep
 
 func (s *PostServiceImpl) Create(ctx context.Context, req *post.PostRequest, token string) (*post.PostResponse, error) {
 	err := s.Validate.Struct(req)
-	if err != nil {
-		fmt.Println("Error validate : ", err)
-		return nil, err
-	}
+	helper.PanicIfError(err)
 
 	tokenFormatted := jwt.FormatToken(token)
 	user, err := s.UserRepository.Find(ctx, tokenFormatted)
@@ -75,11 +73,7 @@ func (s *PostServiceImpl) Find(ctx context.Context, token string, id int) (*post
 
 func (s *PostServiceImpl) Update(ctx context.Context, req *post.UpdatePostRequest, token string) (*post.PostResponse, error) {
 	err := s.Validate.Struct(req)
-	if err != nil {
-		fmt.Println("Error validate : ", err)
-		return nil, err
-	}
-
+	helper.PanicIfError(err)
 	tokenFormatted := jwt.FormatToken(token)
 	user, err := s.UserRepository.Find(ctx, tokenFormatted)
 	if err != nil {
