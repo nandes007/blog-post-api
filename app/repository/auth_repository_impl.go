@@ -78,7 +78,7 @@ func (r *authRepositoryImpl) Register(ctx context.Context, req *auth.RegisterReq
 	}
 
 	return &auth.RegisterResponse{
-		Id:        id,
+		ID:        id,
 		Name:      req.Name,
 		Email:     req.Email,
 		CreatedAt: time.Now(),

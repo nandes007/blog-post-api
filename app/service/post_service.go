@@ -1,14 +1,13 @@
 package service
 
 import (
-	"context"
 	"nandes007/blog-post-rest-api/model/web/post"
 )
 
 type PostService interface {
-	Create(ctx context.Context, req *post.PostRequest, token string) (*post.PostResponse, error)
-	FindAll(ctx context.Context, token string) ([]*post.PostResponse, error)
-	Find(ctx context.Context, token string, id int) (*post.PostResponse, error)
-	Update(ctx context.Context, req *post.UpdatePostRequest, token string) (*post.PostResponse, error)
-	Delete(ctx context.Context, id int) error
+	CreatePost(req *post.PostRequest, userID int) (*post.PostResponse, error)
+	GetAllPosts() ([]*post.PostResponse, error)
+	GetPostByID(id int) (*post.PostResponse, error)
+	UpdatePost(req *post.UpdatePostRequest) (*post.PostResponse, error)
+	DeletePost(id int) error
 }

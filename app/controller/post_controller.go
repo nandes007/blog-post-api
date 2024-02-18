@@ -7,9 +7,9 @@ import (
 )
 
 type PostController interface {
-	Create(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
-	FindAll(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
-	Find(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
-	Update(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
-	Delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
+	CreatePost(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
+	GetAllPosts(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
+	GetPostByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
+	UpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
+	DeletePost(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 }

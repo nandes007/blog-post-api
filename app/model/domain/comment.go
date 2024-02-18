@@ -6,7 +6,7 @@ import (
 )
 
 type Comment struct {
-	Id        int
+	ID        int
 	PostId    int
 	UserId    int
 	ParentId  sql.NullInt64

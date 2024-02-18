@@ -24,16 +24,16 @@ func main() {
 	userService := service.NewUserService(userRepository, validate)
 	userController := controller.NewUserController(userService)
 
-	postRepository := repository.NewPostRepository(db)
-	postService := service.NewPostService(postRepository, userRepository, validate)
+	postRepository := repository.NewPostRepository(db, userRepository)
+	postService := service.NewPostService(postRepository, validate)
 	postController := controller.NewPostController(postService)
 
 	authRepository := repository.NewAuthRepository(db)
 	authService := service.NewAuthService(authRepository, validate)
 	authController := controller.NewAuthController(authService)
 
-	commentRepository := repository.NewCommentRepository(db)
-	commentService := service.NewCommentService(commentRepository, postRepository, userRepository, validate)
+	commentRepository := repository.NewCommentRepository(db, postRepository, userRepository)
+	commentService := service.NewCommentService(commentRepository, validate)
 	commentController := controller.NewCommentController(commentService)
 
 	router := routes.NewRouter(userController, postController, authController, commentController)

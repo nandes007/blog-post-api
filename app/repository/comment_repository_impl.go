@@ -1,37 +1,48 @@
 package repository
 
 import (
-	"context"
 	"database/sql"
 	"nandes007/blog-post-rest-api/model/web/comment"
-	"nandes007/blog-post-rest-api/model/web/post"
-	"nandes007/blog-post-rest-api/model/web/user"
 	"time"
 )
 
 type commentRepositoryImpl struct {
-	db *sql.DB
+	db             *sql.DB
+	postRepository PostRepository
+	userRepository UserRepository
 }
 
-func NewCommentRepository(db *sql.DB) CommentRepository {
+func NewCommentRepository(db *sql.DB, postRepository PostRepository, userRepository UserRepository) CommentRepository {
 	return &commentRepositoryImpl{
-		db: db,
+		db:             db,
+		postRepository: postRepository,
+		userRepository: userRepository,
 	}
 }
 
 // Save implements CommentRepository.
-func (r commentRepositoryImpl) Save(ctx context.Context, user *user.UserResponse, post *post.PostResponse, req *comment.CommentRequest) (*comment.CommentResponse, error) {
+func (r *commentRepositoryImpl) Create(req *comment.CommentRequest, postID int, userID int) (*comment.CommentResponse, error) {
 	var id int
 	sqlQuery := "INSERT INTO post_comments(post_id, user_id, parent_id, content, created_at, updated_at) VALUES ($1, $2, $3, $4) RETURNING id"
-	err := r.db.QueryRowContext(ctx, sqlQuery, post.Id, user.Id, req.ParentId, req.Content, time.Now(), time.Now()).Scan(&id)
+	err := r.db.QueryRow(sqlQuery, postID, userID, req.ParentId, req.Content, time.Now(), time.Now()).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+
+	post, err := r.postRepository.GetByID(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := r.userRepository.GetByID(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &comment.CommentResponse{
-		Id:        id,
-		PostId:    post.Id,
-		UserId:    user.Id,
+		ID:        id,
+		PostId:    postID,
+		UserId:    userID,
 		ParentId:  req.ParentId,
 		Content:   req.Content,
 		User:      *user,

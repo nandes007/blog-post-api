@@ -13,7 +13,7 @@ type CommentRequest struct {
 }
 
 type CommentResponse struct {
-	Id        int               `json:"id"`
+	ID        int               `json:"id"`
 	PostId    int               `json:"post_id"`
 	UserId    int               `json:"user_id"`
 	ParentId  sql.NullInt64     `json:"parent_id"`

@@ -7,6 +7,6 @@ import (
 )
 
 type UserController interface {
-	FindAll(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
-	Find(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
+	GetAllUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
+	GetUserByID(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 }

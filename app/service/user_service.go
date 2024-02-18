@@ -6,6 +6,6 @@ import (
 )
 
 type UserService interface {
-	FindAll(ctx context.Context) ([]*user.UserResponse, error)
-	Find(ctx context.Context, token string) (*user.UserResponse, error)
+	GetAllUsers(ctx context.Context) ([]*user.UserResponse, error)
+	GetUserByID(id int) (*user.UserResponse, error)
 }

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"nandes007/blog-post-rest-api/helper"
+	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/model/web"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/service"
@@ -11,21 +12,33 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type PostControllerImpl struct {
+type postControllerImpl struct {
 	PostService service.PostService
 }
 
 func NewPostController(postService service.PostService) PostController {
-	return &PostControllerImpl{
+	return &postControllerImpl{
 		PostService: postService,
 	}
 }
 
-func (c PostControllerImpl) Create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (c *postControllerImpl) CreatePost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	postCreateRequest := post.PostRequest{}
 	helper.ReadFromRequestBody(r, &postCreateRequest)
 	token := r.Header.Get("Authorization")
-	postResponse, err := c.PostService.Create(r.Context(), &postCreateRequest, token)
+	userId, err := jwt.ParseUserTokenV2(token)
+	if err != nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	postResponse, err := c.PostService.CreatePost(&postCreateRequest, userId)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -44,9 +57,8 @@ func (c PostControllerImpl) Create(w http.ResponseWriter, r *http.Request, _ htt
 	})
 }
 
-func (c PostControllerImpl) FindAll(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	token := r.Header.Get("Authorization")
-	postsResponse, err := c.PostService.FindAll(r.Context(), token)
+func (c *postControllerImpl) GetAllPosts(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	postsResponse, err := c.PostService.GetAllPosts()
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -65,8 +77,7 @@ func (c PostControllerImpl) FindAll(w http.ResponseWriter, r *http.Request, _ ht
 	})
 }
 
-func (c PostControllerImpl) Find(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	token := r.Header.Get("Authorization")
+func (c *postControllerImpl) GetPostByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
@@ -79,7 +90,7 @@ func (c PostControllerImpl) Find(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	postResponse, err := c.PostService.Find(r.Context(), token, id)
+	postResponse, err := c.PostService.GetPostByID(id)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -98,8 +109,7 @@ func (c PostControllerImpl) Find(w http.ResponseWriter, r *http.Request, ps http
 	})
 }
 
-func (c PostControllerImpl) Update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	token := r.Header.Get("Authorization")
+func (c *postControllerImpl) UpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
@@ -115,7 +125,7 @@ func (c PostControllerImpl) Update(w http.ResponseWriter, r *http.Request, ps ht
 	postRequest := post.UpdatePostRequest{}
 	helper.ReadFromRequestBody(r, &postRequest)
 	postRequest.ID = id
-	postResponse, err := c.PostService.Update(r.Context(), &postRequest, token)
+	postResponse, err := c.PostService.UpdatePost(&postRequest)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -134,7 +144,7 @@ func (c PostControllerImpl) Update(w http.ResponseWriter, r *http.Request, ps ht
 	})
 }
 
-func (c PostControllerImpl) Delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (c *postControllerImpl) DeletePost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
@@ -147,7 +157,7 @@ func (c PostControllerImpl) Delete(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	err = c.PostService.Delete(r.Context(), id)
+	err = c.PostService.DeletePost(id)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)

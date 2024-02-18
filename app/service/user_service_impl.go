@@ -5,24 +5,23 @@ import (
 	"fmt"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/repository"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
 
-type UserServiceImpl struct {
+type userServiceImpl struct {
 	UserRepository repository.UserRepository
 	Validate       *validator.Validate
 }
 
 func NewUserService(userRepository repository.UserRepository, validate *validator.Validate) UserService {
-	return &UserServiceImpl{
+	return &userServiceImpl{
 		UserRepository: userRepository,
 		Validate:       validate,
 	}
 }
 
-func (s *UserServiceImpl) FindAll(ctx context.Context) ([]*user.UserResponse, error) {
+func (s *userServiceImpl) GetAllUsers(ctx context.Context) ([]*user.UserResponse, error) {
 	users, err := s.UserRepository.GetAll(ctx)
 	if err != nil {
 		fmt.Println("Error when get all users : ", err)
@@ -30,9 +29,8 @@ func (s *UserServiceImpl) FindAll(ctx context.Context) ([]*user.UserResponse, er
 	return users, nil
 }
 
-func (s *UserServiceImpl) Find(ctx context.Context, token string) (*user.UserResponse, error) {
-	tokenFormatted := strings.Replace(token, "Bearer ", "", 1)
-	user, err := s.UserRepository.Find(ctx, tokenFormatted)
+func (s *userServiceImpl) GetUserByID(id int) (*user.UserResponse, error) {
+	user, err := s.UserRepository.GetByID(id)
 
 	if err != nil {
 		fmt.Println("Error when get user : ", err)

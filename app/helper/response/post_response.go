@@ -7,7 +7,7 @@ import (
 
 func ToPostResponse(postDomain domain.Post) post.PostResponse {
 	return post.PostResponse{
-		Id:        postDomain.Id,
+		ID:        postDomain.ID,
 		Title:     postDomain.Title,
 		Content:   postDomain.Content,
 		CreatedAt: postDomain.CreatedAt,

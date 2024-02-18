@@ -24,18 +24,18 @@ func NewRouter(userController controller.UserController,
 	router.POST("/api/register", authController.Register)
 
 	// users route
-	router.GET("/api/users", middleware.JwtAuthMiddleware(userController.FindAll))
-	router.GET("/api/users/find", middleware.JwtAuthMiddleware(userController.Find))
+	router.GET("/api/users", middleware.JwtAuthMiddleware(userController.GetAllUsers))
+	router.GET("/api/users/find", middleware.JwtAuthMiddleware(userController.GetUserByID))
 
 	// posts route
-	router.POST("/api/posts", middleware.JwtAuthMiddleware(postController.Create))
-	router.GET("/api/posts", middleware.JwtAuthMiddleware(postController.FindAll))
-	router.GET("/api/posts/:id", middleware.JwtAuthMiddleware(postController.Find))
-	router.PUT("/api/posts/:id", middleware.JwtAuthMiddleware(postController.Update))
-	router.DELETE("/api/posts/:id", middleware.JwtAuthMiddleware(postController.Delete))
+	router.POST("/api/posts", middleware.JwtAuthMiddleware(postController.CreatePost))
+	router.GET("/api/posts", middleware.JwtAuthMiddleware(postController.GetAllPosts))
+	router.GET("/api/posts/:id", middleware.JwtAuthMiddleware(postController.GetPostByID))
+	router.PUT("/api/posts/:id", middleware.JwtAuthMiddleware(postController.UpdatePost))
+	router.DELETE("/api/posts/:id", middleware.JwtAuthMiddleware(postController.DeletePost))
 
 	// comments route
-	router.POST("/api/posts/:postId/comments", middleware.JwtAuthMiddleware(commentController.Save))
+	router.POST("/api/posts/:postId/comments", middleware.JwtAuthMiddleware(commentController.Create))
 
 	router.PanicHandler = exception.ErrorHandler
 

@@ -7,5 +7,5 @@ import (
 
 type UserRepository interface {
 	GetAll(ctx context.Context) ([]*user.UserResponse, error)
-	Find(ctx context.Context, token string) (*user.UserResponse, error)
+	GetByID(id int) (*user.UserResponse, error)
 }

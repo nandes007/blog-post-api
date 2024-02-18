@@ -2,6 +2,7 @@ package controller
 
 import (
 	"nandes007/blog-post-rest-api/helper"
+	"nandes007/blog-post-rest-api/helper/jwt"
 	"nandes007/blog-post-rest-api/model/web"
 	"nandes007/blog-post-rest-api/service"
 	"net/http"
@@ -19,8 +20,8 @@ func NewUserController(userService service.UserService) UserController {
 	}
 }
 
-func (c *UserControllerImpl) FindAll(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	userResponse, err := c.UserService.FindAll(r.Context())
+func (c *UserControllerImpl) GetAllUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	userResponse, err := c.UserService.GetAllUsers(r.Context())
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -39,9 +40,21 @@ func (c *UserControllerImpl) FindAll(w http.ResponseWriter, r *http.Request, _ h
 	})
 }
 
-func (c *UserControllerImpl) Find(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (c *UserControllerImpl) GetUserByID(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	token := r.Header.Get("Authorization")
-	user, err := c.UserService.Find(r.Context(), token)
+	userId, err := jwt.ParseUserTokenV2(token)
+	if err != nil {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		helper.WriteToResponseBody(w, &web.ErrorResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	user, err := c.UserService.GetUserByID(userId)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
