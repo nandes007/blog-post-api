@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"nandes007/blog-post-rest-api/helper"
@@ -19,9 +18,9 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	}
 }
 
-func (r *userRepositoryImpl) GetAll(ctx context.Context) ([]*user.UserResponse, error) {
+func (r *userRepositoryImpl) GetAll() ([]*user.UserResponse, error) {
 	SqlQuery := "SELECT id, name, email, created_at, updated_at FROM users"
-	rows, err := r.db.QueryContext(ctx, SqlQuery)
+	rows, err := r.db.Query(SqlQuery)
 	helper.PanicIfError(err)
 	defer rows.Close()
 

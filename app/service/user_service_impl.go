@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/repository"
@@ -21,8 +20,8 @@ func NewUserService(userRepository repository.UserRepository, validate *validato
 	}
 }
 
-func (s *userServiceImpl) GetAllUsers(ctx context.Context) ([]*user.UserResponse, error) {
-	users, err := s.UserRepository.GetAll(ctx)
+func (s *userServiceImpl) GetAllUsers() ([]*user.UserResponse, error) {
+	users, err := s.UserRepository.GetAll()
 	if err != nil {
 		fmt.Println("Error when get all users : ", err)
 	}

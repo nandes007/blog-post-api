@@ -21,7 +21,7 @@ func NewUserController(userService service.UserService) UserController {
 }
 
 func (c *UserControllerImpl) GetAllUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	userResponse, err := c.UserService.GetAllUsers(r.Context())
+	userResponse, err := c.UserService.GetAllUsers()
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)

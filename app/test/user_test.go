@@ -1,7 +1,6 @@
 package test
 
 import (
-	"context"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/service"
 	"testing"
@@ -15,14 +14,31 @@ type mockUserRepository struct {
 	mock.Mock
 }
 
-func (m *mockUserRepository) GetAll(ctx context.Context) ([]*user.UserResponse, error) {
-	args := m.Called(ctx)
+func (m *mockUserRepository) GetAll() ([]*user.UserResponse, error) {
+	args := m.Called()
 	return args.Get(0).([]*user.UserResponse), args.Error(1)
 }
 
 func (m *mockUserRepository) GetByID(id int) (*user.UserResponse, error) {
 	args := m.Called(id)
 	return args.Get(0).(*user.UserResponse), args.Error(1)
+}
+
+func TestUserService_GetAllUsers(t *testing.T) {
+	mockRepo := &mockUserRepository{}
+	validate := validator.New()
+	service := service.NewUserService(mockRepo, validate)
+
+	expected := []*user.UserResponse{
+		{ID: 1, Name: "test1", Email: "test1@example.com"},
+		{ID: 2, Name: "test2", Email: "test2@example.com"},
+	}
+
+	mockRepo.On("GetAll").Return(expected, nil)
+	users, err := service.GetAllUsers()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, users)
+	mockRepo.AssertExpectations(t)
 }
 
 func TestUserService_GetUserByID(t *testing.T) {
