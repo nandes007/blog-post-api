@@ -70,3 +70,32 @@ func TestPostService_CreatePost(t *testing.T) {
 	assert.Equal(t, expected, post)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestPostService_GetAllPosts(t *testing.T) {
+	mockRepo := &mockPostRepository{}
+	validate := validator.New()
+	service := service.NewPostService(mockRepo, validate)
+
+	user1 := &user.UserResponse{
+		ID:    1,
+		Name:  "test1",
+		Email: "test1@example.com",
+	}
+
+	user2 := &user.UserResponse{
+		ID:    2,
+		Name:  "test2",
+		Email: "test2@example.com",
+	}
+
+	expected := []*post.PostResponse{
+		{ID: 1, UserID: user1.ID, Title: "User1 Post", Content: "Hello World!", User: *user1},
+		{ID: 2, UserID: user2.ID, Title: "user2 Post", Content: "Hello Worlds", User: *user2},
+	}
+
+	mockRepo.On("GetAll").Return(expected, nil)
+	posts, err := service.GetAllPosts()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, posts)
+	mockRepo.AssertExpectations(t)
+}
