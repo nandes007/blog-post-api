@@ -1,10 +1,13 @@
 package test
 
 import (
-	"context"
 	"nandes007/blog-post-rest-api/model/web/post"
 	"nandes007/blog-post-rest-api/model/web/user"
+	"nandes007/blog-post-rest-api/service"
+	"testing"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -12,70 +15,58 @@ type mockPostRepository struct {
 	mock.Mock
 }
 
-func (m *mockPostRepository) Save(ctx context.Context, user *user.UserResponse, req *post.PostRequest) (*post.PostResponse, error) {
-	args := m.Called(ctx, user, req)
+func (m *mockPostRepository) Create(req *post.PostRequest, userID int) (*post.PostResponse, error) {
+	args := m.Called(req, userID)
 	return args.Get(0).(*post.PostResponse), args.Error(1)
 }
 
-func (m *mockPostRepository) GetAll(ctx context.Context, user *user.UserResponse) ([]*post.PostResponse, error) {
-	args := m.Called(ctx, user)
+func (m *mockPostRepository) GetAll() ([]*post.PostResponse, error) {
+	args := m.Called()
 	return args.Get(0).([]*post.PostResponse), args.Error(1)
 }
 
-func (m *mockPostRepository) Find(ctx context.Context, user *user.UserResponse, id int) (*post.PostResponse, error) {
-	args := m.Called(ctx, user, id)
+func (m *mockPostRepository) GetByID(id int) (*post.PostResponse, error) {
+	args := m.Called(id)
 	return args.Get(0).(*post.PostResponse), args.Error(1)
 }
 
-func (m *mockPostRepository) Update(ctx context.Context, req *post.UpdatePostRequest, user *user.UserResponse) (*post.PostResponse, error) {
-	args := m.Called(ctx, req, user)
+func (m *mockPostRepository) Update(req *post.UpdatePostRequest) (*post.PostResponse, error) {
+	args := m.Called(req)
 	return args.Get(0).(*post.PostResponse), args.Error(1)
 }
 
-func (m *mockPostRepository) Delete(ctx context.Context, id int) error {
+func (m *mockPostRepository) Delete(id int) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-// func (m *mockUserRepository) GetAll(ctx context.Context) ([]*user.UserResponse, error) {
-// 	args := m.Called(ctx)
-// 	return args.Get(0).([]*user.UserResponse), args.Error(1)
-// }
+func TestPostService_CreatePost(t *testing.T) {
+	mockRepo := &mockPostRepository{}
+	validate := validator.New()
+	service := service.NewPostService(mockRepo, validate)
 
-// func (m *mockUserRepository) Find(ctx context.Context, token string) (*user.UserResponse, error) {
-// 	args := m.Called(ctx, token)
-// 	return args.Get(0).(*user.UserResponse), args.Error(1)
-// }
+	user := &user.UserResponse{
+		ID:    1,
+		Name:  "test",
+		Email: "test@example.com",
+	}
 
-// func TestPostService_CreatePost(t *testing.T) {
-// 	postMockRepo := &mockPostRepository{}
-// 	userMockRepo := &mockUserRepository{}
-// 	validate := validator.New()
+	req := &post.PostRequest{
+		Title:   "My First Post",
+		Content: "Hello World!",
+	}
 
-// 	token := "TOKEN"
-// 	req := &post.PostRequest{
-// 		Title:   "Daily Blog",
-// 		Content: "Hello world!",
-// 	}
-// 	user := &user.UserResponse{
-// 		Id:        1,
-// 		Name:      "test",
-// 		Email:     "test@example.com",
-// 		CreatedAt: time.Now(),
-// 		UpdatedAt: time.Now(),
-// 	}
+	expected := &post.PostResponse{
+		ID:      1,
+		UserID:  user.ID,
+		Title:   "My First Post",
+		Content: "Hello World!",
+		User:    *user,
+	}
 
-// 	expected := &post.PostResponse{
-// 		Id:      1,
-// 		Title:   "test",
-// 		Content: "Hello world!",
-// 		User:    *user,
-// 	}
-
-// 	service := service.NewPostService(postMockRepo, userMockRepo, validate)
-// 	postMockRepo.On("Save", context.Background(), user, req).Return(expected, nil)
-// 	createdPost, err := service.Create(context.Background(), req, token)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, expected, createdPost)
-// 	postMockRepo.AssertExpectations(t)
-// }
+	mockRepo.On("Create", req, user.ID).Return(expected, nil)
+	post, err := service.CreatePost(req, user.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, post)
+	mockRepo.AssertExpectations(t)
+}
