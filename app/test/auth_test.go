@@ -1,6 +1,7 @@
 package test
 
 import (
+	"errors"
 	"nandes007/blog-post-rest-api/model/web/auth"
 	"nandes007/blog-post-rest-api/service"
 	"testing"
@@ -67,5 +68,40 @@ func TestAuthService_Register(t *testing.T) {
 	res, err := service.Register(req)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthService_Login_Error(t *testing.T) {
+	mockRepo := &mockAuthRepository{}
+	validate := validator.New()
+	service := service.NewAuthService(mockRepo, validate)
+
+	req := &auth.LoginRequest{
+		Email:    "test@example.com",
+		Password: "password",
+	}
+
+	mockRepo.On("Login", req).Return(&auth.LoginResponse{}, errors.New("failed to login"))
+	res, err := service.Login(req)
+	assert.Error(t, err)
+	assert.Nil(t, res)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthService_Register_Error(t *testing.T) {
+	mockRepo := &mockAuthRepository{}
+	validate := validator.New()
+	service := service.NewAuthService(mockRepo, validate)
+
+	req := &auth.RegisterRequest{
+		Name:     "test",
+		Email:    "test@example.com",
+		Password: "password",
+	}
+
+	mockRepo.On("Register", req).Return(&auth.RegisterResponse{}, errors.New("failed to register"))
+	res, err := service.Register(req)
+	assert.Error(t, err)
+	assert.Nil(t, res)
 	mockRepo.AssertExpectations(t)
 }
