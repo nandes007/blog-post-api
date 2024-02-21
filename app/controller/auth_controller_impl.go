@@ -23,7 +23,7 @@ func NewAuthController(authService service.AuthService) AuthController {
 func (c *AuthControllerImpl) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	loginRequest := auth.LoginRequest{}
 	helper.ReadFromRequestBody(r, &loginRequest)
-	token, err := c.AuthService.Login(r.Context(), &loginRequest)
+	token, err := c.AuthService.Login(&loginRequest)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -45,7 +45,7 @@ func (c *AuthControllerImpl) Login(w http.ResponseWriter, r *http.Request, _ htt
 func (c *AuthControllerImpl) Register(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	registerRequest := auth.RegisterRequest{}
 	helper.ReadFromRequestBody(r, &registerRequest)
-	response, err := c.AuthService.Register(r.Context(), &registerRequest)
+	response, err := c.AuthService.Register(&registerRequest)
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)

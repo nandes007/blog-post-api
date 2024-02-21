@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"nandes007/blog-post-rest-api/helper"
@@ -23,14 +22,14 @@ func NewAuthRepository(db *sql.DB) AuthRepository {
 	}
 }
 
-func (r *authRepositoryImpl) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+func (r *authRepositoryImpl) Login(req *auth.LoginRequest) (*auth.LoginResponse, error) {
 	stmt, err := r.db.Prepare("SELECT id, email, password FROM users WHERE email = $1 LIMIT 1")
 	if err != nil {
 		return nil, err
 	}
 
 	defer stmt.Close()
-	row := stmt.QueryRowContext(ctx, req.Email)
+	row := stmt.QueryRow(req.Email)
 
 	var id int
 	var (
@@ -62,7 +61,7 @@ func (r *authRepositoryImpl) Login(ctx context.Context, req *auth.LoginRequest) 
 	}, nil
 }
 
-func (r *authRepositoryImpl) Register(ctx context.Context, req *auth.RegisterRequest) (*auth.RegisterResponse, error) {
+func (r *authRepositoryImpl) Register(req *auth.RegisterRequest) (*auth.RegisterResponse, error) {
 	var id int
 	passwordHashed := hash.PasswordHash(req.Password)
 
@@ -72,7 +71,7 @@ func (r *authRepositoryImpl) Register(ctx context.Context, req *auth.RegisterReq
 	}
 	defer helper.CommitOrRollback(tx)
 	stmt := "INSERT INTO users(name, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
-	err = tx.QueryRowContext(ctx, stmt, req.Name, req.Email, passwordHashed, time.Now(), time.Now()).Scan(&id)
+	err = tx.QueryRow(stmt, req.Name, req.Email, passwordHashed, time.Now(), time.Now()).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
