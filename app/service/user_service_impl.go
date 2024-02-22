@@ -24,12 +24,17 @@ func (s *userServiceImpl) GetAllUsers() ([]*user.UserResponse, error) {
 	users, err := s.UserRepository.GetAll()
 	if err != nil {
 		fmt.Println("Error when get all users : ", err)
+		return nil, err
 	}
 	return users, nil
 }
 
 func (s *userServiceImpl) GetUserByID(id int) (*user.UserResponse, error) {
 	user, err := s.UserRepository.GetByID(id)
+	if err != nil {
+		fmt.Println("failed to retrieve user")
+		return nil, err
+	}
 
 	if err != nil {
 		fmt.Println("Error when get user : ", err)

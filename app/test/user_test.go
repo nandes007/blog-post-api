@@ -1,6 +1,7 @@
 package test
 
 import (
+	"errors"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"nandes007/blog-post-rest-api/service"
 	"testing"
@@ -57,5 +58,35 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedUser, user)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_GetAllUsers_Error(t *testing.T) {
+	mockRepo := &mockUserRepository{}
+	validate := validator.New()
+	service := service.NewUserService(mockRepo, validate)
+
+	expected := []*user.UserResponse{
+		{ID: 1, Name: "test1", Email: "test1@example.com"},
+		{ID: 2, Name: "test2", Email: "test2@example.com"},
+	}
+
+	mockRepo.On("GetAll").Return(expected, errors.New("failed to retrieve users"))
+	users, err := service.GetAllUsers()
+	assert.Error(t, err)
+	assert.Nil(t, users)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_GetUserByID_Error(t *testing.T) {
+	mockRepo := &mockUserRepository{}
+	validate := validator.New()
+	service := service.NewUserService(mockRepo, validate)
+
+	mockRepo.On("GetByID", 1).Return(&user.UserResponse{}, errors.New("failed to retrieve user"))
+	user, err := service.GetUserByID(1)
+
+	assert.Error(t, err)
+	assert.Nil(t, user)
 	mockRepo.AssertExpectations(t)
 }

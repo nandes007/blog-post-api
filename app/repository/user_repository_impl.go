@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"nandes007/blog-post-rest-api/helper"
 	"nandes007/blog-post-rest-api/model/web/user"
 	"time"
 )
@@ -21,7 +20,9 @@ func NewUserRepository(db *sql.DB) UserRepository {
 func (r *userRepositoryImpl) GetAll() ([]*user.UserResponse, error) {
 	SqlQuery := "SELECT id, name, email, created_at, updated_at FROM users"
 	rows, err := r.db.Query(SqlQuery)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
 	var users []*user.UserResponse
